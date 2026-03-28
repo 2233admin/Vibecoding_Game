@@ -695,24 +695,28 @@ function handleKeyDown(event) {
   if (key === "w" || event.key === "ArrowUp") {
     event.preventDefault()
     state.player.inputDirection = "up"
+    state.player._dirHeld = true
     return
   }
 
   if (key === "s" || event.key === "ArrowDown") {
     event.preventDefault()
     state.player.inputDirection = "down"
+    state.player._dirHeld = true
     return
   }
 
   if (key === "a" || event.key === "ArrowLeft") {
     event.preventDefault()
     state.player.inputDirection = "left"
+    state.player._dirHeld = true
     return
   }
 
   if (key === "d" || event.key === "ArrowRight") {
     event.preventDefault()
     state.player.inputDirection = "right"
+    state.player._dirHeld = true
     return
   }
 
@@ -760,6 +764,7 @@ function handleKeyUp(event) {
   const cur = state.player.inputDirection
   if (cur && released[cur]) {
     state.player.inputDirection = null
+    state.player._dirHeld = false
   }
 }
 
@@ -791,8 +796,8 @@ function updatePlayerMovement() {
       p.renderY = targetY
       p.moving = false
 
-      // 补间完成后立即检查是否继续按着方向键
-      if (p.inputDirection && !state.vnActive && !state.choice && state.scene !== "battle") {
+      // 补间完成后只有键仍按住才继续走（单次点按只走一格）
+      if (p._dirHeld && p.inputDirection && !state.vnActive && !state.choice && state.scene !== "battle") {
         const move = DIRECTION_MAP[p.inputDirection]
         if (move) {
           attemptMove(move.dx, move.dy, move.dir)
