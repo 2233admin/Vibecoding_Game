@@ -465,6 +465,21 @@
     titleText.alpha = 0;
     uiLayer.addChild(titleText);
 
+    // ── pixi-filters 特效（如果可用）──
+    if (typeof PIXI.GlowFilter !== 'undefined') {
+      titleText.filters = [
+        new PIXI.GlowFilter({ distance: 15, outerStrength: 2.5, innerStrength: 0.5, color: 0x4488ff }),
+      ];
+      silhouetteLayer.filters = [
+        new PIXI.GlowFilter({ distance: 12, outerStrength: 2, innerStrength: 0, color: 0x66ccff }),
+      ];
+    }
+    if (typeof PIXI.AdvancedBloomFilter !== 'undefined') {
+      fxLayer.filters = [
+        new PIXI.AdvancedBloomFilter({ threshold: 0.3, bloomScale: 1.5, brightness: 1.2, blur: 8, quality: 6 }),
+      ];
+    }
+
     // 副标题
     const subtitleStyle = new PIXI.TextStyle({
       fontFamily: '"Press Start 2P", "Microsoft YaHei", "PingFang SC", sans-serif',
@@ -521,8 +536,16 @@
     // 交互
     btnContainer.eventMode = 'static';
     btnContainer.cursor = 'pointer';
-    btnContainer.on('pointerover', () => { drawBtn(true); });
-    btnContainer.on('pointerout', () => { drawBtn(false); });
+    btnContainer.on('pointerover', () => {
+      drawBtn(true);
+      if (typeof PIXI.GlowFilter !== 'undefined') {
+        btnContainer.filters = [new PIXI.GlowFilter({ distance: 10, outerStrength: 3, color: 0x44aaff })];
+      }
+    });
+    btnContainer.on('pointerout', () => {
+      drawBtn(false);
+      btnContainer.filters = [];
+    });
     btnContainer.on('pointerdown', () => { dismissTitleScreen(); });
 
     // ─────────────────────────────────────────────
