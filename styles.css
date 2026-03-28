@@ -1,6 +1,6 @@
 :root {
-  --font-display: "Constantia", "Palatino Linotype", Georgia, serif;
-  --font-ui: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif;
+  --font-display: "Inter", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --font-ui: "Inter", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
 
   /* Design System Tokens (PC v0.1) */
   --ds-bg-world-top: #9fd3ff;
@@ -842,7 +842,7 @@ body.in-game-menu-open .in-game-hud {
 
 .battle-head h2 {
   font-size: 2rem;
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: "Inter", "Microsoft YaHei", sans-serif;
   letter-spacing: 0.03em;
   text-shadow: 0 1px 0 rgba(15, 22, 35, 0.52);
 }
@@ -955,7 +955,7 @@ body.in-game-menu-open .in-game-hud {
 
 .combatant h3 {
   font-size: 1.5rem;
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: "Inter", "Microsoft YaHei", sans-serif;
 }
 
 .type-pill {

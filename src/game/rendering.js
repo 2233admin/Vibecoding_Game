@@ -532,7 +532,7 @@ function drawGuideTile(tile, x, y, time) {
   ctx.stroke()
 
   ctx.fillStyle = style.color
-  ctx.font = "700 20px 'Trebuchet MS', 'Segoe UI', sans-serif"
+  ctx.font = "700 20px 'Inter', 'Microsoft YaHei', sans-serif"
   ctx.textAlign = "center"
   ctx.textBaseline = "middle"
   ctx.fillText(style.label, x + TILE_SIZE / 2, y + TILE_SIZE / 2 + 1)
@@ -770,7 +770,7 @@ function drawHomeFacilityLabel(label, color, x, y) {
   ctx.roundRect(x + 16, y + 3, TILE_SIZE - 32, 12, 6)
   ctx.fill()
   ctx.fillStyle = color
-  ctx.font = "700 14px 'Trebuchet MS', 'Segoe UI', sans-serif"
+  ctx.font = "700 14px 'Inter', 'Microsoft YaHei', sans-serif"
   ctx.textAlign = "center"
   ctx.textBaseline = "middle"
   ctx.fillText(label, x + TILE_SIZE / 2, y + 9)
@@ -915,7 +915,7 @@ function drawCharacterNameTag(x, y, name, options = {}) {
   const color = options.color || "#f6f4ea"
 
   ctx.save()
-  ctx.font = "700 12px 'Trebuchet MS', 'Segoe UI', sans-serif"
+  ctx.font = "700 12px 'Inter', 'Microsoft YaHei', sans-serif"
   ctx.textAlign = "center"
   ctx.textBaseline = "middle"
 
@@ -1071,7 +1071,7 @@ function drawNpcSpeechBubble(time) {
   const bubbleHeight = 34
 
   ctx.save()
-  ctx.font = "700 16px 'Trebuchet MS', 'Segoe UI', sans-serif"
+  ctx.font = "700 16px 'Inter', 'Microsoft YaHei', sans-serif"
   const text = fitSingleLineText(rawText, maxBubbleWidth - 24) || "..."
   const measured = ctx.measureText(text).width
   const bubbleWidth = Math.min(maxBubbleWidth, Math.max(minBubbleWidth, measured + 26))
