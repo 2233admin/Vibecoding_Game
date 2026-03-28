@@ -766,7 +766,7 @@ function handleKeyUp(event) {
 // 平滑移动速度：TILE_SIZE 像素 / 移动时间帧数
 // TILE_SIZE=56，目标 150ms/格，60fps → 约 9 帧 → 每帧 ~6.2px
 // 用固定像素速度而非时间插值，简单稳定
-const MOVE_SPEED_PX = 7  // 56/8 ≈ 每帧 7px，约 133ms/格
+const MOVE_SPEED_PX = 4  // 56/14 ≈ 每帧 4px，约 233ms/格，接近宝可梦手感
 
 // 每帧由 renderWorld 调用，驱动玩家平滑移动
 function updatePlayerMovement() {
