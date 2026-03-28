@@ -28,9 +28,22 @@
     return
   }
 
-  if (state.battle.captureTutorial && action.type !== "capture") {
-    addBattleLog("这是缔约捕捉教学，请直接投掷精灵球。")
-    return
+  if (state.battle.captureTutorial) {
+    const tutorialStage = String(state.battle.captureTutorialStage || "capture")
+    if (tutorialStage === "weaken" && action.type === "capture") {
+      const enemy = getEnemyMonster()
+      if (enemy) {
+        const targetHp = getCaptureTutorialTargetHp(enemy)
+        addBattleLog(`教学提示：先把 ${speciesData[enemy.speciesId].name} 压到残血（≤ ${targetHp} HP），再投掷精灵球。`)
+      } else {
+        addBattleLog("教学提示：先把目标压到残血，再投掷精灵球。")
+      }
+      return
+    }
+    if (tutorialStage === "capture" && action.type !== "capture") {
+      addBattleLog("教学提示：时机已到，请现在投掷精灵球完成缔约。")
+      return
+    }
   }
 
   if (action.type === "switch") {
@@ -188,7 +201,18 @@ async function resolveCaptureTurn() {
     return
   }
 
+  const captureTutorial = Boolean(state.battle?.captureTutorial)
+  const tutorialStage = String(state.battle?.captureTutorialStage || "capture")
+  if (captureTutorial && tutorialStage !== "capture") {
+    const targetHp = getCaptureTutorialTargetHp(enemy)
+    addBattleLog(`教学提示：先压低到残血（≤ ${targetHp} HP），目标会锁定在 1 HP。`)
+    return
+  }
+
   state.player.balls -= 1
+  if (captureTutorial) {
+    state.battle.captureAttempts = (Number(state.battle.captureAttempts) || 0) + 1
+  }
   addBattleLog("你投出了捕捉球。")
   await sleep(450)
 
@@ -199,6 +223,13 @@ async function resolveCaptureTurn() {
       addBattleLog("缔约共鸣生效：这次捕捉必定成功。")
       await sleep(300)
     }
+  } else if (captureTutorial) {
+    const ratioMissing = 1 - enemy.currentHp / enemy.maxHp
+    const attempts = Number(state.battle.captureAttempts) || 1
+    const tutorialChance = Math.min(0.985, 0.72 + ratioMissing * 0.22 + Math.min(0.16, attempts * 0.06))
+    catchSuccess = attempts >= 3 ? true : Math.random() <= tutorialChance
+    addBattleLog(`缔约教学判定：捕捉成功率约 ${Math.round(tutorialChance * 100)}%。`)
+    await sleep(240)
   } else {
     const ratioMissing = 1 - enemy.currentHp / enemy.maxHp
     let catchChance =
@@ -239,6 +270,10 @@ async function resolveCaptureTurn() {
     if (state.battle.captureTag === "golden_chosen_cub") {
       state.flags.goldenLegendCubCaptured = true
       addDialogue(`契约完成：${speciesData[enemy.speciesId].name} 认可了你的流派，加入了你的旅队。`)
+      if (!state.flags.ideologyHintShown) {
+        state.flags.ideologyHintShown = true
+        addDialogue("系统: 花冠大道出现理念冲突求援。去找「同盟教众 辰铃」开启《理念之争》。")
+      }
     }
 
     const activeMonster = getActiveMonster()
@@ -530,7 +565,18 @@ function performAttack(attacker, defender, skillId) {
   }
 
   defender.currentHp = clamp(defender.currentHp - damage, 0, defender.maxHp)
+  if (shouldApplyCaptureTutorialHpFloor(defender)) {
+    const hpFloor = Math.max(1, Number(state.battle?.captureTutorialHpFloor) || 1)
+    defender.currentHp = Math.max(defender.currentHp, hpFloor)
+  }
+  const playerSideMonster = getActiveMonster()
+  const isPlayerAttack = Boolean(playerSideMonster && attacker?.uid === playerSideMonster.uid)
+  if (skill.wildSpareOneHp && isPlayerAttack && state.battle?.kind === "wild" && defender.currentHp <= 0) {
+    defender.currentHp = 1
+    messages.push("仁慈生效：目标被保留在 1 HP。")
+  }
   messages.push(`${defenderSpecies.name} 受到了 ${damage} 点伤害。`)
+  updateCaptureTutorialStageIfReady(defender, messages)
   if (Number(skill.drainRatio) > 0 && attacker.currentHp > 0) {
     const recovered = clamp(Math.floor(damage * Number(skill.drainRatio)), 1, attacker.maxHp)
     const beforeHp = attacker.currentHp
@@ -565,6 +611,45 @@ function performAttack(attacker, defender, skillId) {
   }
 
   return { messages }
+}
+
+function getCaptureTutorialTargetHp(enemy) {
+  const ratio = Math.max(0.05, Math.min(0.6, Number(state.battle?.captureTutorialTargetHpRate) || 0.2))
+  return Math.max(1, Math.floor(enemy.maxHp * ratio))
+}
+
+function isCaptureTutorialEnemyTarget(monster) {
+  if (!state.battle?.captureTutorial || !monster) {
+    return false
+  }
+  const enemy = getEnemyMonster()
+  return Boolean(enemy && enemy.uid === monster.uid)
+}
+
+function shouldApplyCaptureTutorialHpFloor(monster) {
+  if (!isCaptureTutorialEnemyTarget(monster)) {
+    return false
+  }
+  return String(state.battle?.captureTutorialStage || "capture") === "weaken"
+}
+
+function updateCaptureTutorialStageIfReady(monster, messages) {
+  if (!isCaptureTutorialEnemyTarget(monster)) {
+    return
+  }
+  if (String(state.battle?.captureTutorialStage || "capture") !== "weaken") {
+    return
+  }
+
+  const targetHp = getCaptureTutorialTargetHp(monster)
+  if (monster.currentHp > targetHp) {
+    return
+  }
+
+  state.battle.captureTutorialStage = "capture"
+  const speciesName = speciesData[monster.speciesId]?.name || "目标精灵"
+  messages.push(`${speciesName} 已进入残血状态，捕捉窗口开启。`)
+  messages.push("教学提示：现在使用“投掷精灵球”完成捕捉。")
 }
 
 function resolveTurnStartStatusEffects(monster) {
@@ -866,6 +951,23 @@ async function handlePlayerFaint() {
     }
   }
 
+  if (state.battle?.mainlineFailSafe) {
+    const activeMonster = getActiveMonster()
+    if (activeMonster) {
+      activeMonster.currentHp = 1
+      if (state.battle.statusByUid?.[activeMonster.uid]) {
+        state.battle.statusByUid[activeMonster.uid] = {
+          ailment: null,
+          confusionTurns: 0,
+          sleepTurns: 0,
+        }
+      }
+      addBattleLog("主线保底触发：你的精灵在临界点稳住了，保留 1 HP 继续战斗。")
+      await sleep(420)
+      return "stop_turn"
+    }
+  }
+
   const nextIndex = findNextLivingIndex()
   if (nextIndex === -1) {
     addBattleLog("你的队伍失去了战斗能力，系统将把你送往最近的传送石像。")
@@ -1062,6 +1164,24 @@ function handleTrainerVictory(trainerId) {
     })
     addDialogue(`你击败了蚀星先遣洛克（奖励 ${gainedCoins} 金币），并从他身上夺回了草原情报。`)
     addDialogue("系统提示: 草原后段封锁已解除，蚀星执旗官正在等待下一场对决。")
+    return
+  }
+
+  if (trainerId === "ideology_hunter") {
+    state.flags.ideologyBattleWon = true
+    state.flags.ideologyConflictResolved = true
+    const gainedCoins = grantBattleCoins(120)
+    state.player.balls += 2
+    grantEssenceFromSpecies(null, {
+      arcane: 1,
+      void: 1,
+      weapon: 1,
+      source: "trainer_ideology_hunter",
+      notify: true,
+    })
+    addDialogue(`你击败了追猎者赫恩（奖励 ${gainedCoins} 金币），成功守住了同盟教众。`)
+    addDialogue("同盟教众 辰铃: 神兽幼体的觉醒只是起点，道馆试炼里还藏着下一次机遇。")
+    addDialogue("主线提示: 继续推进花冠大道封锁战，完成后回城领取道馆通行证。")
     return
   }
 

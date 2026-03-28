@@ -1006,13 +1006,19 @@ function triggerChosenLegendCubEncounter() {
   state.flags.goldenLegendCubEncountered = true
   addDialogue("草丛深处传来熟悉的神性波动，你的流派契约正在回应。")
   addDialogue(`一只 ${speciesData[cubSpeciesId].name} 从风中现身，向你发起缔约试炼。`)
+  addDialogue("系统教学: 捕捉成功率与目标剩余 HP 相关，血量越低越容易捕捉。")
+  addDialogue("系统教学: 先把它压到残血。目标会锁定在 1 HP，不会被直接击倒。")
   startWildBattle({
     pool: [{ speciesId: cubSpeciesId, minLevel: 6, maxLevel: 6, weight: 1 }],
     forceLevel: 6,
-    openingLine: `这是缔约捕捉教学：请投掷精灵球，与 ${speciesData[cubSpeciesId].name} 建立契约。`,
-    forceCaptureSuccess: true,
+    openingLine: `缔约捕捉教学：先把 ${speciesData[cubSpeciesId].name} 压到残血，再投掷精灵球完成契约。`,
+    forceCaptureSuccess: false,
     captureTutorial: true,
+    captureTutorialMode: "weaken_then_capture",
+    captureTutorialHpFloor: 1,
+    captureTutorialTargetHpRate: 0.18,
     disableRun: true,
+    mainlineFailSafe: true,
     captureTag: "golden_chosen_cub",
   })
   queueSave()
@@ -2132,9 +2138,247 @@ function interactCaretaker() {
   addDialogue("照料员林: 别担心，我已经把你的队伍都照看好了。")
 }
 
+function getDoctrinePath() {
+  return sanitizeGoldenPath(state.progress?.chosenPath) || "fusion"
+}
+
+function findChosenLegendCubInRoster() {
+  const cubSpeciesId = String(state.progress?.chosenLegendaryCubSpeciesId || "").trim()
+  if (!cubSpeciesId) {
+    return null
+  }
+  const pools = [
+    { key: "party", list: state.player.party || [] },
+    { key: "reserve", list: state.player.reserve || [] },
+    { key: "home", list: state.player.home || [] },
+  ]
+  for (const pool of pools) {
+    for (const monster of pool.list) {
+      if (monster?.speciesId === cubSpeciesId) {
+        return { monster, pool: pool.key }
+      }
+    }
+  }
+  return null
+}
+
+function hasDoctrinePathEvolution(path, monster) {
+  if (!monster) {
+    return false
+  }
+  return String(monster.mutation?.mode || "") === String(path || "")
+}
+
+function ensureDoctrineFusionMaterialInReserve() {
+  const reserveList = Array.isArray(state.player.reserve) ? state.player.reserve : []
+  const existing = reserveList.find((monster) => monster?.doctrineMaterialTag === "ideology_fusion_wing")
+  if (existing) {
+    return existing
+  }
+  if (reserveList.length >= MAX_RESERVE_SIZE) {
+    addDialogue(`同盟教众 辰铃: 你的后备区已满（${MAX_RESERVE_SIZE}）。先整理后备区再领取白翼素材。`)
+    return null
+  }
+  const material = createMonster("windthorn", 6)
+  material.doctrineMaterialTag = "ideology_fusion_wing"
+  material.nickname = "白翼素材体"
+  markSeen(material.speciesId)
+  markCaught(material.speciesId)
+  reserveList.push(material)
+  state.player.reserve = reserveList
+  state.flags.ideologyFusionMaterialGranted = true
+  addDialogue("同盟教众 辰铃: 我把白翼素材体放进你的后备区了，用它和神兽幼体做融合。")
+  return material
+}
+
+function grantDoctrineDevourMaterials() {
+  if (state.flags.ideologyDevourMaterialGranted) {
+    return
+  }
+  addInventoryItem("weapon_core", 1)
+  const essence = getPlayerEssence()
+  essence.weapon = Math.max(2, Number(essence.weapon) || 0) + 1
+  essence.void = Math.max(1, Number(essence.void) || 0)
+  state.flags.ideologyDevourMaterialGranted = true
+  addDialogue("同盟教众 辰铃: 这枚残破圣剑交给你了。它足够触发一次武装吞噬。")
+}
+
+function applyDoctrineBlessing(monster, path) {
+  if (!monster || state.flags.ideologyBlessingApplied) {
+    return
+  }
+  if (path === "fusion") {
+    monster.attack = Math.max(1, Math.floor(monster.attack * 1.08))
+    monster.defense = Math.max(1, Math.floor(monster.defense * 1.06))
+    monster.maxHp = Math.max(1, Math.floor(monster.maxHp * 1.08))
+    monster.speed = Math.max(1, Math.floor(monster.speed * 1.22))
+    if (!monster.mutation || typeof monster.mutation !== "object") {
+      monster.mutation = {}
+    }
+    monster.mutation.trait = "一往无前"
+    addDialogue("系统: 融合流派加护生效。你的神兽幼体获得速度强化与特性「一往无前」。")
+  } else {
+    monster.attack = Math.max(1, Math.floor(monster.attack * 1.12))
+    monster.defense = Math.max(1, Math.floor(monster.defense * 1.08))
+    monster.maxHp = Math.max(1, Math.floor(monster.maxHp * 1.14))
+    monster.speed = Math.max(1, Math.floor(monster.speed * 1.04))
+    if (!monster.mutation || typeof monster.mutation !== "object") {
+      monster.mutation = {}
+    }
+    monster.mutation.trait = "续航"
+    addDialogue("系统: 吞噬流派加护生效。你的神兽幼体获得耐久强化与特性「续航」。")
+  }
+  monster.currentHp = monster.maxHp
+  state.flags.ideologyBlessingApplied = true
+}
+
+function grantDoctrineMercySkill(monster) {
+  if (!monster || state.flags.ideologyMercyGranted) {
+    return
+  }
+  if (!Array.isArray(monster.skills)) {
+    monster.skills = []
+  }
+  const result = learnSkillWithLimit(monster.skills, "mercy_strike", { limit: MAX_SKILL_SLOTS })
+  if (result.learned && result.replacedSkillId && moveData[result.replacedSkillId]) {
+    addDialogue(`系统: ${speciesData[monster.speciesId].name} 学会了「仁慈」，替换了 ${moveData[result.replacedSkillId].name}。`)
+  } else if (result.learned) {
+    addDialogue(`系统: ${speciesData[monster.speciesId].name} 学会了「仁慈」。`)
+  }
+  state.flags.ideologyMercyGranted = true
+}
+
+function openDoctrineEvolutionGuidance(path) {
+  const pathLabel = path === "fusion" ? "融合" : "吞噬"
+  openChoice(`理念之争 · ${pathLabel}觉醒`, [
+    {
+      label: "前往家园执行特殊进化",
+      description: "自动传送并预填神兽幼体与对应素材，完成本次主线觉醒。",
+      buttonLabel: "立即执行",
+      onSelect: () => {
+        closeChoice()
+        const cubRecord = findChosenLegendCubInRoster()
+        if (!cubRecord?.monster) {
+          addDialogue("系统: 未找到神兽幼体，无法开始觉醒。")
+          return
+        }
+        if (path === "fusion") {
+          const material = ensureDoctrineFusionMaterialInReserve()
+          if (!material) {
+            return
+          }
+          changeMap("home", 11, 4, "你传送到家园融合台。辰铃已将神兽幼体与白翼素材接入流程。")
+          syncUi()
+          if (ui.fusionTargetSelect) {
+            ui.fusionTargetSelect.value = cubRecord.monster.uid
+          }
+          if (ui.fusionPartnerSelect) {
+            ui.fusionPartnerSelect.value = material.uid
+          }
+          openFusionConfirmChoice()
+        } else {
+          grantDoctrineDevourMaterials()
+          changeMap("home", 5, 8, "你传送到家园吞噬台。残破圣剑已完成绑定。")
+          syncUi()
+          if (ui.devourTargetSelect) {
+            ui.devourTargetSelect.value = cubRecord.monster.uid
+          }
+          if (ui.devourElementSelect) {
+            ui.devourElementSelect.value = "weapon"
+          }
+          openDevourConfirmChoice()
+        }
+        queueSave()
+      },
+    },
+    {
+      label: "稍后再做",
+      description: "先调整队伍，准备好后再来继续《理念之争》。",
+      onSelect: () => {
+        closeChoice()
+        addDialogue("同盟教众 辰铃: 我会继续拖住追猎者。你准备好后再来。")
+      },
+    },
+  ])
+}
+
+function interactDoctrineEnvoy() {
+  if (!state.flags.goldenLegendCubCaptured) {
+    addDialogue("同盟教众 辰铃: 先完成神兽幼体缔约，再来谈理念之争。")
+    return
+  }
+  if (state.flags.ideologyConflictResolved) {
+    addDialogue("同盟教众 辰铃: 你已经证明了立场。去推进道馆线索吧。")
+    return
+  }
+  const path = getDoctrinePath()
+  const pathLabel = path === "fusion" ? "融合" : "吞噬"
+  const cubRecord = findChosenLegendCubInRoster()
+  if (!cubRecord?.monster) {
+    addDialogue("同盟教众 辰铃: 你的神兽幼体不在队伍体系里，先整理后再来。")
+    return
+  }
+
+  if (!state.flags.ideologyConflictStarted) {
+    openChoice("主线《理念之争》：是否出手相助？", [
+      {
+        label: "出手相助",
+        description: "保护同盟教众，体验一次与流派绑定的特殊进化。",
+        buttonLabel: "接取主线",
+        onSelect: () => {
+          closeChoice()
+          state.flags.ideologyConflictStarted = true
+          addDialogue("同盟教众 辰铃: 对立教派正在追杀我们，你愿意站出来，我就把觉醒素材交给你。")
+          addDialogue(`同盟教众 辰铃: 你走的是${pathLabel}流派，先让神兽幼体完成一次对应觉醒。`)
+          if (path === "fusion") {
+            ensureDoctrineFusionMaterialInReserve()
+          } else {
+            grantDoctrineDevourMaterials()
+          }
+          openDoctrineEvolutionGuidance(path)
+          queueSave()
+        },
+      },
+      {
+        label: "稍后处理",
+        description: "暂时不接，先去整备队伍。",
+        onSelect: () => {
+          closeChoice()
+          addDialogue("同盟教众 辰铃: 我会先躲进草丛掩体。你准备好就来找我。")
+        },
+      },
+    ])
+    return
+  }
+
+  if (!hasDoctrinePathEvolution(path, cubRecord.monster)) {
+    addDialogue(`同盟教众 辰铃: 你还没完成${pathLabel}觉醒。先把神兽幼体进化了，我们才有胜算。`)
+    openDoctrineEvolutionGuidance(path)
+    return
+  }
+
+  if (!state.flags.ideologyBlessingApplied) {
+    applyDoctrineBlessing(cubRecord.monster, path)
+  }
+  if (!state.flags.ideologyMercyGranted) {
+    grantDoctrineMercySkill(cubRecord.monster)
+  }
+  if (!state.flags.ideologyBattleWon) {
+    addDialogue("同盟教众 辰铃: 追猎者到了。用你刚觉醒的幼体，证明你的理念。")
+    startTrainerBattle("ideology_hunter")
+    return
+  }
+  addDialogue("同盟教众 辰铃: 你已经赢下理念之争。下一次神兽机遇，去道馆里找答案。")
+}
+
 function interactScout() {
   if (state.storyStage < 2) {
     addDialogue("蚀星先遣 洛克: 你还没资格介入草原深处的神兽线索。")
+    return
+  }
+
+  if (!state.flags.ideologyConflictResolved) {
+    addDialogue("蚀星先遣 洛克: 先处理你们教派内部的理念之争，再来碰我的封锁线。")
     return
   }
 
@@ -3605,6 +3849,21 @@ const GOLDEN_MIRROR_NAME_PRESETS = Object.freeze([
   "岚影",
 ])
 
+const GOLDEN_MIRROR_PRESET_PORTRAIT_KEYS = Object.freeze([
+  "player_9dc5d6c1",
+  "player_653f3455",
+  "female_urban_v1",
+  "female_scholar_v1",
+  "female_wild_v1",
+  "female_fairy_v1",
+  "female_energetic_v1",
+  "male_hotblood_v1",
+  "male_cool_v1",
+  "male_artistic_v1",
+  "male_rugged_v1",
+  "male_mystery_v1",
+])
+
 let goldenMirrorIdentityImageCache = ""
 
 function getGoldenMirrorIdentityImageSrc() {
@@ -4013,7 +4272,13 @@ function finalizeGoldenPrologue() {
   state.flags.goldenPrologueCompleted = true
   state.flags.onboardingHintShown = true
   state.flags.playerIdentityReady = true
-  addDialogue("系统: 预示之梦已记录。前往研究站找教授雪松，领取你的第一位伙伴。")
+  addDialogue("系统: 预示之梦已记录。")
+  addDialogue("系统引导: 目标已更新为“前往研究站找教授雪松领取主宠”。")
+  addDialogue("系统引导: 靠近教授后按 空格 / E 互动。")
+  state.storyFocus = createStoryFocus({
+    speakerId: "professor",
+    line: "教授雪松正在研究站等待你领取第一位伙伴。",
+  })
   syncUi()
   queueSave()
 }
@@ -4083,27 +4348,34 @@ function openMirrorIdentityChoice() {
         ? "male"
         : "unknown"
 
-  openChoice("梦醒镜前：登记你的训练家身份", [
+  const presetPortraitKeys = GOLDEN_MIRROR_PRESET_PORTRAIT_KEYS.filter((key) =>
+    Boolean(ART_MANIFEST?.characters?.[key])
+  )
+  const fallbackPresetKey =
+    presetPortraitKeys[0] || getSystemDefaultPlayerPortraitKeys("unknown")[0] || "player"
+
+  openChoice("梦醒镜前：登记身份与立绘（单页）", [
     {
-      label: "镜前登记（推荐）",
-      description: "名字可从推荐列表选择，也可手动填写；性别使用下拉选择。",
-      buttonLabel: "确认并继续",
+      label: "训练家档案设置",
+      description:
+        "同一页面完成：名字（随机/自定义）、性别（男/女/保密）、立绘方案（系统12套/自定义生成）。",
+      buttonLabel: "确认并进入主线",
       imageSrc: getGoldenMirrorIdentityImageSrc(),
-      imageAlt: "镜前身份登记",
+      imageAlt: "镜前身份与立绘设置",
       formFields: [
         {
-          key: "namePreset",
-          label: "推荐名字（可选）",
+          key: "nameMode",
+          label: "名字模式",
           type: "select",
           options: [
-            { value: "", label: "不选择，使用自填名字" },
-            ...GOLDEN_MIRROR_NAME_PRESETS.map((name) => ({ value: name, label: name })),
+            { value: "random", label: "随机" },
+            { value: "custom", label: "自定义" },
           ],
-          value: "",
+          value: "random",
         },
         {
           key: "playerName",
-          label: "自定义名字（最多12字）",
+          label: "自定义名字（名字模式=自定义时生效）",
           type: "text",
           maxLength: 12,
           value: "",
@@ -4116,16 +4388,56 @@ function openMirrorIdentityChoice() {
           options: [
             { value: "male", label: "男" },
             { value: "female", label: "女" },
-            { value: "unknown", label: "其他" },
+            { value: "unknown", label: "保密" },
           ],
           value: genderDefault,
         },
+        {
+          key: "portraitMode",
+          label: "立绘方案",
+          type: "select",
+          options: [
+            { value: "preset", label: "系统预设（12套可选）" },
+            { value: "custom", label: "自定义生成（后台任务）" },
+          ],
+          value: "preset",
+        },
+        {
+          key: "presetPortraitKey",
+          label: "系统预设立绘（立绘方案=系统预设时生效）",
+          type: "select",
+          options: presetPortraitKeys.map((key) => ({ value: key, label: getPlayerPortraitTemplateLabel(key) })),
+          value: fallbackPresetKey,
+        },
+        {
+          key: "customPromptMode",
+          label: "自定义生成提示词",
+          type: "select",
+          options: [
+            { value: "template", label: "随机模板（推荐）" },
+            { value: "custom", label: "手动填写" },
+          ],
+          value: "template",
+        },
+        {
+          key: "customPrompt",
+          label: "手动提示词（提示词模式=手动填写时生效）",
+          type: "textarea",
+          rows: 4,
+          maxLength: 360,
+          placeholder: "例如：少年训练家，机能风短外套，明亮动漫立绘，纯白背景",
+          value: "",
+        },
       ],
       onSelect: (payload = {}) => {
-        const rawPresetName = String(payload.namePreset || "").trim()
-        const rawCustomName = String(payload.playerName || "").trim()
-        const playerName = sanitizePlayerName(rawCustomName || rawPresetName || fallbackName)
+        const nameMode = String(payload.nameMode || "random").trim().toLowerCase()
         const gender = normalizePlayerGender(payload.gender || genderDefault)
+        const randomName =
+          GOLDEN_MIRROR_NAME_PRESETS[randomInt(0, GOLDEN_MIRROR_NAME_PRESETS.length - 1)] || fallbackName
+        const customName = sanitizePlayerName(payload.playerName || "")
+        const playerName =
+          nameMode === "custom" ? sanitizePlayerName(customName || fallbackName) : sanitizePlayerName(randomName)
+
         if (!state.playerProfile || typeof state.playerProfile !== "object") {
           state.playerProfile = {}
         }
@@ -4134,29 +4446,40 @@ function openMirrorIdentityChoice() {
         state.playerProfile.title = sanitizePlayerTitle(state.playerProfile.title, "见习训练家")
         state.playerProfile.motto = sanitizePlayerMotto(state.playerProfile.motto, "")
         state.flags.playerIdentityReady = true
+
+        if (typeof sanitizeGameStartSettings === "function") {
+          gameStartSettings = sanitizeGameStartSettings({
+            ...settings,
+            playerName,
+          })
+          if (typeof writeGameStartSettings === "function") {
+            writeGameStartSettings()
+          }
+        }
+
+        const portraitMode = String(payload.portraitMode || "preset").trim().toLowerCase()
+        if (portraitMode === "custom") {
+          const fallbackPortraitKey = resolveMirrorPendingPortraitFallbackKey(gender)
+          applySystemDefaultPlayerPortraitByKey(fallbackPortraitKey, { silent: true })
+          const promptMode = String(payload.customPromptMode || "template").trim().toLowerCase()
+          const prompt =
+            promptMode === "custom"
+              ? String(payload.customPrompt || "").trim() ||
+                buildOpeningPortraitPrompt(playerName, getRandomPlayerPromptTemplate(gender))
+              : buildOpeningPortraitPrompt(playerName, getRandomPlayerPromptTemplate(gender))
+          submitProloguePortraitPrompt(prompt, "系统: 已提交自定义立绘任务。生成完成前将先使用默认立绘。")
+        } else {
+          const preferredPresetKey = String(payload.presetPortraitKey || "").trim()
+          const selectedPresetKey = presetPortraitKeys.includes(preferredPresetKey)
+            ? preferredPresetKey
+            : fallbackPresetKey
+          applySystemDefaultPlayerPortraitByKey(selectedPresetKey, { silent: true })
+          addDialogue(`系统: 已应用系统预设立绘「${getPlayerPortraitTemplateLabel(selectedPresetKey)}」。`)
+        }
+
         closeChoice()
         addDialogue(`你在镜前确认了身份：${state.playerProfile.title}${playerName}（${getPlayerGenderLabel(gender)}）。`)
-        openProloguePortraitChoice()
-      },
-    },
-    {
-      label: "沿用默认身份",
-      description: "使用当前默认名字继续，并直接进入立绘选择。",
-      buttonLabel: "继续",
-      imageSrc: getGoldenMirrorIdentityImageSrc(),
-      imageAlt: "沿用默认身份",
-      onSelect: () => {
-        closeChoice()
-        state.playerName = fallbackName
-        if (!state.playerProfile || typeof state.playerProfile !== "object") {
-          state.playerProfile = {}
-        }
-        state.playerProfile.gender = normalizePlayerGender(genderDefault)
-        state.playerProfile.title = sanitizePlayerTitle(state.playerProfile.title, "见习训练家")
-        state.playerProfile.motto = sanitizePlayerMotto(state.playerProfile.motto, "")
-        state.flags.playerIdentityReady = true
-        addDialogue(`你选择以「${state.playerProfile.title}${state.playerName}」的身份开始旅程。`)
-        openProloguePortraitChoice()
+        finalizeGoldenPrologue()
       },
     },
   ])
@@ -4210,8 +4533,43 @@ function startNewPlayerOnboarding() {
 }
 
 const PLAYER_DEFAULT_PORTRAIT_POOL = Object.freeze({
-  male: ["player", "player_653f3455", "player_9dc5d6c1", "player_53ddf5e8"],
-  female: ["player_9dc5d6c1", "player_53ddf5e8", "player_653f3455", "player"],
+  male: [
+    "male_hotblood_v1",
+    "male_cool_v1",
+    "male_artistic_v1",
+    "male_rugged_v1",
+    "male_sunny_v1",
+    "male_mystery_v1",
+    "player_9dc5d6c1",
+    "player_653f3455",
+    "player",
+  ],
+  female: [
+    "female_urban_v1",
+    "female_scholar_v1",
+    "female_wild_v1",
+    "female_fairy_v1",
+    "female_energetic_v1",
+    "female_mature_v1",
+    "player_9dc5d6c1",
+    "player_53ddf5e8",
+    "player",
+  ],
+  unknown: [
+    "player_9dc5d6c1",
+    "player_653f3455",
+    "player_53ddf5e8",
+    "female_urban_v1",
+    "female_scholar_v1",
+    "female_wild_v1",
+    "female_fairy_v1",
+    "male_hotblood_v1",
+    "male_cool_v1",
+    "male_artistic_v1",
+    "male_rugged_v1",
+    "male_mystery_v1",
+    "player",
+  ],
 })
 
 const PLAYER_RANDOM_PROMPT_TEMPLATES = Object.freeze({
@@ -4280,8 +4638,41 @@ function getSystemDefaultPlayerPortraitKeys(gender = "unknown") {
       ? PLAYER_DEFAULT_PORTRAIT_POOL.male
       : gender === "female"
         ? PLAYER_DEFAULT_PORTRAIT_POOL.female
-        : [...PLAYER_DEFAULT_PORTRAIT_POOL.male, ...PLAYER_DEFAULT_PORTRAIT_POOL.female]
+        : PLAYER_DEFAULT_PORTRAIT_POOL.unknown
   return [...new Set(pool)].filter((key) => Boolean(ART_MANIFEST?.characters?.[key]))
+}
+
+function getPlayerPortraitTemplateLabel(key) {
+  const labels = {
+    player: "默认主角",
+    player_9dc5d6c1: "经典旅者·A",
+    player_653f3455: "经典旅者·B",
+    player_53ddf5e8: "经典旅者·C",
+    female_urban_v1: "少女·都市",
+    female_scholar_v1: "少女·学者",
+    female_wild_v1: "少女·荒野",
+    female_fairy_v1: "少女·灵光",
+    female_energetic_v1: "少女·元气",
+    female_mature_v1: "少女·沉稳",
+    male_hotblood_v1: "少年·热血",
+    male_cool_v1: "少年·冷峻",
+    male_artistic_v1: "少年·艺术",
+    male_rugged_v1: "少年·硬派",
+    male_sunny_v1: "少年·晴朗",
+    male_mystery_v1: "少年·神秘",
+  }
+  return labels[key] || key
+}
+
+function resolveMirrorPendingPortraitFallbackKey(gender = "unknown") {
+  const preferred = ["player_9dc5d6c1", "player_653f3455", "player_53ddf5e8", "player"]
+  for (const key of preferred) {
+    if (ART_MANIFEST?.characters?.[key]) {
+      return key
+    }
+  }
+  const fallbackPool = getSystemDefaultPlayerPortraitKeys(gender)
+  return fallbackPool[0] || "player"
 }
 
 function applySystemDefaultPlayerPortraitByKey(key, options = {}) {
@@ -4340,7 +4731,7 @@ function openSystemDefaultPlayerPortraitChoice(source = "tutorial") {
   }
 
   openChoice("系统精美立绘：选择并应用", keys.map((key) => ({
-    label: key === "player" ? "默认主角立绘" : `模板 ${key}`,
+    label: getPlayerPortraitTemplateLabel(key),
     description: `来源：系统预置 · 性别偏好：${getPlayerGenderLabel(gender)}`,
     buttonLabel: "使用这张立绘",
     imageSrc: ART_MANIFEST?.characters?.[key] || "",
@@ -4514,6 +4905,11 @@ function startWildBattle(options = {}) {
   }
 
   state.scene = "battle"
+  const captureTutorial = Boolean(options.captureTutorial)
+  const captureTutorialMode = captureTutorial
+    ? String(options.captureTutorialMode || "capture_only").trim().toLowerCase()
+    : ""
+  const captureTutorialStage = captureTutorialMode === "weaken_then_capture" ? "weaken" : "capture"
   state.battle = {
     kind: "wild",
     enemyName: enemy.isLegendary
@@ -4544,8 +4940,14 @@ function startWildBattle(options = {}) {
     statusByUid: {},
     showSwitchPanel: false,
     forceCaptureSuccess: Boolean(options.forceCaptureSuccess),
-    captureTutorial: Boolean(options.captureTutorial),
+    captureTutorial: captureTutorial,
+    captureTutorialMode,
+    captureTutorialStage,
+    captureTutorialHpFloor: Math.max(1, Number(options.captureTutorialHpFloor) || 1),
+    captureTutorialTargetHpRate: Math.max(0.05, Math.min(0.6, Number(options.captureTutorialTargetHpRate) || 0.2)),
+    captureAttempts: 0,
     disableRun: Boolean(options.disableRun),
+    mainlineFailSafe: Boolean(options.mainlineFailSafe),
     captureTag: String(options.captureTag || ""),
   }
 
@@ -4577,6 +4979,7 @@ function startTrainerBattle(trainerId) {
       ...(trainerId === "tutorial_aide"
         ? ["教学保护已启用：本场你造成更高伤害，且可触发一次濒死救援。"]
         : []),
+      ...(trainer.mainlineFailSafe ? ["主线保底已启用：剧情战中你的出战精灵最低会保留 1 HP。"] : []),
       ...(assistDelta > 0 ? [`连败保护生效：本场训练师等级 -${assistDelta}。`] : []),
       `${trainer.name} 派出了 ${speciesData[enemyParty[0].speciesId].name}。`,
     ],
@@ -4602,6 +5005,7 @@ function startTrainerBattle(trainerId) {
             oneTimeRescueUsed: false,
           }
         : null,
+    mainlineFailSafe: Boolean(trainer.mainlineFailSafe),
   }
 
   renderBattlePanel()

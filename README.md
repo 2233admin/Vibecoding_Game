@@ -1,5 +1,16 @@
 ﻿# GBIT Monster Quest
 
+## 最近更新（2026-03-28）
+
+- **剧情过场系统**：新增帧式双屏开场动画（台词 + 渐变切场），序幕可跳过
+- **战斗技能学习**：升级/进化后弹出技能解锁面板，支持替换已有技能（4 选 1）
+- **战斗结算优化**：胜利/失败/逃跑后展示战斗摘要，再进入保存确认流程
+- **特性（Trait）系统**：怪兽新增被动特性，影响伤害、命中、速度等战斗参数
+- **UI 优化**：选项按钮双列对称布局，战斗信息面板样式重构
+- **平衡调整**：IV 系统、经验公式、防御系数持续微调
+
+---
+
 一个可本地直接运行的宝可梦风单机原型，包含这些系统：
 
 - 跑图探索
@@ -132,129 +143,3 @@ npm run publish:assets -- character
 npm run publish:assets -- character scout
 npm run publish:assets -- monster sprigoon
 ```
-
-## ComfyUI 本地生成
-
-我已经把项目接成了“ComfyUI 生成 -> 保存到项目 `assets/` -> 游戏自动读取”的流程。
-
-相关文件：
-
-- 配置文件：[comfyui.config.json](./comfyui.config.json)
-- 生成脚本：[scripts/generate-comfy-asset.mjs](./scripts/generate-comfy-asset.mjs)
-- 预设提示词：[scripts/comfy-presets.mjs](./scripts/comfy-presets.mjs)
-- 自动资源清单：[assets.generated.js](./assets.generated.js)
-- 手动覆盖清单：[assets.js](./assets.js)
-
-### 当前默认模型
-
-已经按你给的模型路径写入默认配置：
-
-`D:\comfyui\ComfyUI_Backup\ComfyUI_FLUX\models\checkpoints\chenkin-noob0.38_0309.safetensors`
-
-默认会使用它的文件名：
-
-`chenkin-noob0.38_0309.safetensors`
-
-如果你的 ComfyUI 里显示的 checkpoint 名称不是这个，就把 [comfyui.config.json](./comfyui.config.json) 里的 `checkpointName` 改成 ComfyUI 实际识别到的名字。
-
-### 先启动 ComfyUI
-
-默认地址写的是：
-
-`http://127.0.0.1:8188`
-
-如果你的 ComfyUI 不是这个端口，就修改 [comfyui.config.json](./comfyui.config.json) 里的 `baseUrl`。
-
-### 常用命令
-
-列出怪兽预设：
-
-```bash
-npm run generate:monster:list
-```
-
-生成一张怪兽立绘并注册到游戏：
-
-```bash
-npm run generate:monster -- sprigoon
-```
-
-生成场景图：
-
-```bash
-npm run generate:scene -- town
-```
-
-自定义提示词生成：
-
-```bash
-npm run generate:monster -- sprigoon "cute grass seed cat creature, leaf sprout on back, anime creature portrait, centered, vibrant"
-```
-
-如果你想完全手动控制参数，也可以直接运行：
-
-```bash
-node scripts/generate-comfy-asset.mjs --type monster --id sprigoon --steps 32 --cfg 6
-```
-
-### 生成结果会去哪里
-
-- 怪兽：`assets/monsters/<normal|legendary>/<species_id>/<base|fusion|devour>/stage<0|1|2>/<asset_key>.png`
-- 角色：`assets/characters/player/<id>.png` 或 `assets/characters/npc/<id>.png`
-- 场景：`assets/scene/<id>.png`
-- 地块：`assets/tiles/<id>.png`
-
-脚本会自动更新 [assets.generated.js](./assets.generated.js)，所以刷新 [index.html](./index.html) 后游戏就能直接读到新资源。
-
-### 建议你先生成哪些
-
-最推荐先做这几类，因为效果最稳定：
-
-- `monster`: 战斗立绘，最适合用 SDXL 直接出图
-- `scene`: 城镇、道路、道馆大背景
-
-`character` 和 `tile` 也能生成，但通常还需要你后续手动修一下，尤其是顶视角角色和规则地块。
-
-## 自然语言实时生成立绘
-
-这版还额外接了一个本地 AI 服务，适合在游戏运行时直接输入描述生成怪兽立绘。
-
-### 启动步骤
-
-1. 启动你的 ComfyUI
-2. 在项目目录运行：
-
-```bash
-npm run dev
-```
-
-3. 打开：
-
-```text
-http://127.0.0.1:4310
-```
-
-4. 在右侧的“AI 立绘工坊”里：
-
-- 选择目标怪兽
-- 输入自然语言描述
-- 点击“生成当前怪兽立绘”
-
-此外，你还可以在右侧“玩家形象生成”中输入提示词，直接替换主角立绘。
-
-生成完成后：
-
-- 图片会写入 `assets/monsters/<normal|legendary>/<species_id>/<base|fusion|devour>/stage<0|1|2>/<asset_key>.png`
-- [assets.generated.js](./assets.generated.js) 会自动更新
-- 战斗界面和图鉴会直接读到最新立绘
-
-### 实时模式目前的行为
-
-- 同一只怪兽、同一句提示词会优先命中本地缓存
-- 任务会按队列顺序执行，避免同时塞太多生成请求
-- 页面里会显示排队、生成中、完成或失败状态
-
-### 相关文件
-
-- 本地服务：[scripts/dev-server.mjs](./scripts/dev-server.mjs)
-- 前端 AI 面板逻辑：[game.js](./game.js)

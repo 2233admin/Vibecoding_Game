@@ -461,6 +461,60 @@ body::after {
   gap: 8px;
 }
 
+.in-canvas-story-dock {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: min(320px, 34%);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.in-canvas-story-card {
+  padding: 12px;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 242, 231, 0.88));
+  box-shadow:
+    0 12px 24px rgba(14, 19, 27, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.in-canvas-story-card .section-heading h2 {
+  font-size: 0.94rem;
+}
+
+.in-canvas-story-card .section-heading span {
+  font-size: 0.66rem;
+}
+
+.in-canvas-story-card .story-portrait-shell {
+  margin-top: 8px;
+  gap: 8px;
+}
+
+.in-canvas-story-card .story-portrait-frame {
+  min-height: 180px;
+}
+
+.in-canvas-story-card .story-portrait-copy {
+  padding: 10px;
+  gap: 4px;
+}
+
+.in-canvas-story-card .story-portrait-copy strong {
+  font-size: 1.08rem;
+}
+
+.in-canvas-story-card .objective-text {
+  font-size: 0.84rem;
+  line-height: 1.52;
+}
+
+body.in-game-menu-open .in-canvas-story-dock {
+  opacity: 0.12;
+}
+
 .in-game-hud-button {
   min-height: 34px;
   padding: 0 10px;
@@ -1185,6 +1239,29 @@ body.in-game-menu-open .in-game-hud {
   background: linear-gradient(180deg, #f0c97a, #d89e3f);
 }
 
+#actionCapture.capture-highlight {
+  border-color: rgba(255, 248, 205, 0.95);
+  box-shadow:
+    0 0 0 2px rgba(255, 219, 116, 0.42),
+    0 10px 20px rgba(28, 20, 10, 0.26);
+  animation: capture-button-pulse 0.92s ease-in-out infinite;
+}
+
+@keyframes capture-button-pulse {
+  0% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(-1px);
+    filter: brightness(1.09);
+  }
+  100% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+}
+
 #actionItem {
   color: #2f3f55;
   background: linear-gradient(180deg, #c9d9f4, #90aad4);
@@ -1602,6 +1679,10 @@ body.in-game-menu-open .in-game-hud {
 
 .choice-overlay[data-theme="mirror"] .choice-option-media {
   aspect-ratio: 4 / 3;
+}
+
+.choice-overlay[data-theme="mirror"] .choice-options[data-count="1"] {
+  max-width: min(760px, 100%);
 }
 
 .choice-options {
@@ -2403,6 +2484,17 @@ textarea:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .in-canvas-story-dock {
+    position: static;
+    width: 100%;
+    margin: 10px 0 0;
+    pointer-events: auto;
+  }
+
+  .in-canvas-story-card .story-portrait-frame {
+    min-height: 160px;
+  }
+
   .in-game-hud-button {
     min-height: 32px;
     font-size: 0.68rem;
@@ -2595,6 +2687,14 @@ textarea:focus-visible {
   #gameCanvas {
     width: min(100%, calc(58vh * 4 / 3));
     max-height: 58vh;
+  }
+
+  .in-canvas-story-dock {
+    width: min(260px, 32%);
+  }
+
+  .in-canvas-story-card .story-portrait-frame {
+    min-height: 132px;
   }
 
   .stage .bottom-zone {

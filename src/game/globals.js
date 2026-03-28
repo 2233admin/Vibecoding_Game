@@ -580,6 +580,14 @@ const moveData = {
     category: "status",
     effects: [{ kind: "status", target: "enemy", status: "paralysis" }],
   },
+  mercy_strike: {
+    name: "仁慈",
+    power: 16,
+    accuracy: 0.95,
+    type: "normal",
+    category: "physical",
+    wildSpareOneHp: true,
+  },
   frost_peck: {
     name: "霜羽突袭",
     power: 17,
@@ -1538,9 +1546,19 @@ const trainerData = {
     intro: "艾可: 先来一场教学战吧，体验一下技能、克制和换位节奏。",
     team: [["beetbit", 3]],
   },
+  ideology_hunter: {
+    name: "噬星追猎者 赫恩",
+    intro: "赫恩冷笑着逼近：理念之争从不是口号，今天就用你的神兽幼体证明立场。",
+    mainlineFailSafe: true,
+    team: [
+      ["cinderpup", 6],
+      ["voltkit", 6],
+    ],
+  },
   scout: {
     name: "蚀星先遣 洛克",
     intro: "洛克拦在草原入口，宣称“神兽线索应由蚀星组织回收”，并向你发起封锁战。",
+    mainlineFailSafe: true,
     team: [
       ["beetbit", 3],
       ["sporemarch", 4],
@@ -1549,6 +1567,7 @@ const trainerData = {
   vanguard: {
     name: "蚀星执旗 维萝",
     intro: "维萝在道馆前布下第二道封锁，试图在你挑战馆主前彻底打乱队伍节奏。",
+    mainlineFailSafe: true,
     team: [
       ["windthorn", 5],
       ["vinehorn", 5],
@@ -1558,6 +1577,7 @@ const trainerData = {
   leader: {
     name: "馆主 阿斯特拉",
     intro: "阿斯特拉宣布草系道馆试炼开始：你将面对“控场-续航-轮换”三重压力测试。",
+    mainlineFailSafe: true,
     team: [
       ["reedimp", 8],
       ["sporemarch", 9],
@@ -2644,6 +2664,17 @@ const npcDefinitions = [
     color: "#7ac5da",
     visible: () => state.storyStage >= 1,
     interact: () => interactCaretaker(),
+  },
+  {
+    id: "doctrine_envoy",
+    map: "route",
+    x: 4,
+    y: 6,
+    name: "同盟教众 辰铃",
+    symbol: "盟",
+    color: "#8ebfda",
+    visible: () => state.storyStage >= 1 && state.storyStage <= 2 && state.flags.goldenLegendCubCaptured && !state.flags.ideologyConflictResolved,
+    interact: () => interactDoctrineEnvoy(),
   },
   {
     id: "scout",

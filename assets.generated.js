@@ -29,7 +29,9 @@ window.GBIT_ASSETS_GENERATED = {
     "male_rugged_v1": "assets/characters/player/male_rugged_v1.jpg",
     "male_sunny_v1": "assets/characters/player/male_sunny_v1.jpg",
     "male_mystery_v1": "assets/characters/player/male_mystery_v1.jpg",
-    "player_e7b99ca4": "assets/characters/player/player_e7b99ca4.jpg"
+    "player_e7b99ca4": "assets/characters/player/player_e7b99ca4.jpg",
+    "player_145cc6c0": "assets/characters/player/player_145cc6c0.jpg",
+    "alchemist": "assets/characters/npc/alchemist.jpg"
   },
   "monsters": {
     "preset_blazehound_fire_elemental": "assets/monsters/normal/blazehound/fusion/stage1/preset_blazehound_fire_elemental.jpg",
@@ -123,6 +125,10 @@ window.GBIT_ASSETS_GENERATED = {
     "dex_solaraith_cub_v2": "assets/monsters/normal/dex/base/stage0/dex_solaraith_cub_v2.jpg",
     "abyssalor_s2_full_v3": "assets/monsters/legendary/abyssalor/base/stage2/abyssalor_s2_full_v3.jpg",
     "solaraith_s2_full_v3": "assets/monsters/legendary/solaraith/base/stage2/solaraith_s2_full_v3.jpg",
-    "divine_sword_v1": "assets/monsters/normal/divine/base/stage0/divine_sword_v1.jpg"
+    "divine_sword_v1": "assets/monsters/normal/divine/base/stage0/divine_sword_v1.jpg",
+    "dex_abyssalor_cub_v2": "assets/monsters/normal/dex/base/stage0/dex_abyssalor_cub_v2.jpg",
+    "dex_abyssalor_cub_v1": "assets/monsters/normal/dex/base/stage0/dex_abyssalor_cub_v1.jpg",
+    "dex_sporemarch_v1": "assets/monsters/normal/sporemarch/base/stage0/dex_sporemarch_v1.jpg",
+    "dex_sporemarch_v2": "assets/monsters/normal/sporemarch/base/stage0/dex_sporemarch_v2.jpg"
   }
 }

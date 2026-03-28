@@ -1470,6 +1470,9 @@ function pushAlchemyLog(message) {
 function renderBattlePanel() {
   if (!state.battle) {
     ui.battleOverlay.classList.add("hidden")
+    if (ui.actionCapture) {
+      ui.actionCapture.classList.remove("capture-highlight")
+    }
     if (ui.evolutionPortraitStatus) {
       ui.evolutionPortraitStatus.classList.add("hidden")
     }
@@ -1495,8 +1498,18 @@ function renderBattlePanel() {
   const playerTypes = getSpeciesTypes(player)
   const battleTitle =
     state.battle.kind === "wild" ? "野外遭遇" : `对战 ${state.battle.enemyName}`
-  const battleHint =
-    state.battle.kind === "wild"
+  const captureTutorialStage = String(state.battle.captureTutorialStage || "capture")
+  const captureTargetHp = Math.max(
+    1,
+    Math.floor(
+      enemy.maxHp * Math.max(0.05, Math.min(0.6, Number(state.battle.captureTutorialTargetHpRate) || 0.2))
+    )
+  )
+  const battleHint = state.battle.captureTutorial
+    ? captureTutorialStage === "weaken"
+      ? `教学：先把目标压到残血（≤ ${captureTargetHp} HP，锁血 1 HP），再投掷精灵球。`
+      : "教学：时机已到，投掷精灵球完成缔约捕捉。"
+    : state.battle.kind === "wild"
       ? "先用招式压低血量，再决定捕捉或切换。"
       : "训练家战强调属性与节奏，可用切换和道具拉开优势。"
 
@@ -1541,7 +1554,15 @@ function renderBattlePanel() {
   ui.actionCapture.textContent =
     state.battle.kind === "wild" ? "投掷捕捉球" : "训练家战不可捕捉"
   if (state.battle.captureTutorial) {
-    ui.actionCapture.textContent = "缔约捕捉（必定成功）"
+    if (captureTutorialStage === "weaken") {
+      ui.actionCapture.textContent = "教学中：先压低血量"
+      ui.actionCapture.classList.remove("capture-highlight")
+    } else {
+      ui.actionCapture.textContent = "缔约捕捉（高成功率）"
+      ui.actionCapture.classList.add("capture-highlight")
+    }
+  } else {
+    ui.actionCapture.classList.remove("capture-highlight")
   }
   ui.actionRun.textContent =
     state.battle.kind === "wild"
@@ -1563,7 +1584,8 @@ function renderBattlePanel() {
   }
 
   const disabled = state.battle.locked
-  const captureTutorialOnly = Boolean(state.battle.captureTutorial)
+  const captureTutorialActive = Boolean(state.battle.captureTutorial)
+  const captureTutorialOnly = captureTutorialActive && String(state.battle.captureTutorialStage || "capture") === "capture"
   ui.actionSkill0.disabled = disabled || !skill0 || captureTutorialOnly
   ui.actionSkill1.disabled = disabled || !skill1 || captureTutorialOnly
   if (ui.actionSkill2) {
@@ -1574,14 +1596,14 @@ function renderBattlePanel() {
   }
   ui.actionCapture.disabled = disabled || state.battle.kind !== "wild"
   if (ui.actionItem) {
-    ui.actionItem.disabled = disabled || battleItemStacks.length <= 0 || captureTutorialOnly
+    ui.actionItem.disabled = disabled || battleItemStacks.length <= 0 || captureTutorialActive
   }
-  ui.actionRun.disabled = disabled || state.battle.kind !== "wild" || state.battle.disableRun || captureTutorialOnly
+  ui.actionRun.disabled = disabled || state.battle.kind !== "wild" || state.battle.disableRun || captureTutorialActive
   if (ui.actionSwitch) {
     const hasBenchMonster = state.player.party.some(
       (monster, index) => index !== state.player.activeIndex && monster.currentHp > 0
     )
-    ui.actionSwitch.disabled = disabled || !hasBenchMonster || captureTutorialOnly
+    ui.actionSwitch.disabled = disabled || !hasBenchMonster || captureTutorialActive
   }
 
   renderBattleSwitchPanel()

@@ -1,0 +1,187 @@
+{
+  "_comment": "特性平衡配置 v1 — 由 Balance Agent 生成，2026-03-28",
+  "_usage": "本文件由 src/game/battle-system.js 和冒险逻辑读取。改参数只改此文件，不改 JS。非法值由加载模块自动回退默认。",
+
+  "tierPolicy": {
+    "preGymAllowSTier": false,
+    "_comment_preGymAllowSTier": "首道馆前禁止发放 S 级特性。投放逻辑由主程侧在道馆解锁事件中切换为 true。"
+  },
+
+  "stackingPolicy": {
+    "sameTypeStack": false,
+    "priority": ["S", "A", "B"],
+    "_comment": "同类效果不叠加，取优先级最高者的值（S>A>B）。跨类型效果可同时生效。"
+  },
+
+  "traits": {
+
+    "blaze_boost_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "火势增幅",
+      "label_en": "Blaze Boost",
+      "description": "持有者使用火系技能时，伤害提升 10%。",
+      "effect": {
+        "fireDamagePct": 0.10
+      },
+      "bounds": {
+        "fireDamagePct_min": 0.05,
+        "fireDamagePct_max": 0.15,
+        "_comment": "强度区间 5%~15%，当前取 10%（B 级中位）。"
+      },
+      "triggerCondition": "持有者使用属性为 fire 的技能时触发",
+      "stackGroup": "type_boost",
+      "preGymAllowed": true
+    },
+
+    "fervor_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "奋勇",
+      "label_en": "Fervor",
+      "description": "持有者当前 HP 越低，造成伤害越高，最大额外增伤 +15%。",
+      "effect": {
+        "lowHpDamageMaxPct": 0.15,
+        "lowHpThresholdPct": 0.50,
+        "_comment": "HP 在 50% 以下开始线性增益：damage_bonus = lowHpDamageMaxPct × (1 - currentHp/maxHp×2)，clamp(0, lowHpDamageMaxPct)。"
+      },
+      "bounds": {
+        "lowHpDamageMaxPct_min": 0.08,
+        "lowHpDamageMaxPct_max": 0.20
+      },
+      "triggerCondition": "持有者当前 HP < 50% maxHp 时，按缺血比例线性增伤，上限 +15%",
+      "stackGroup": "low_hp_boost",
+      "preGymAllowed": true
+    },
+
+    "fearless_stride_a": {
+      "tier": "A",
+      "type": "adventure",
+      "label": "一往无前",
+      "label_en": "Fearless Stride",
+      "description": "队伍中存在该特性（背包/后备即可生效），对等级严格低于自身的野生精灵，逃跑成功率 100%。",
+      "effect": {
+        "guaranteedRunWhenHigherLevel": true,
+        "activeInReserve": true,
+        "_comment": "等级比较对象：持有者等级 vs 野生精灵等级。若持有者等级 > 野怪等级，逃跑必成功。等级相等或低于则无效。"
+      },
+      "bounds": {},
+      "triggerCondition": "持有者（队内任意位置）等级 > 目标野生精灵等级",
+      "stackGroup": "run_rate",
+      "preGymAllowed": true,
+      "adventureActiveInBag": true
+    },
+
+    "sustain_a": {
+      "tier": "A",
+      "type": "adventure",
+      "label": "续航",
+      "label_en": "Sustain",
+      "description": "持有者在背包/后备中时，每经过一个探索 tick，自动回复最大 HP 的 2% 血量。不可超过最大 HP。",
+      "effect": {
+        "reserveRegenPerTickPct": 0.02,
+        "activeInReserve": true,
+        "_comment": "tick 定义由主程侧决定（建议=每步/每次遭遇结算后）。上场战斗期间不回血。"
+      },
+      "bounds": {
+        "reserveRegenPerTickPct_min": 0.015,
+        "reserveRegenPerTickPct_max": 0.030
+      },
+      "triggerCondition": "持有者处于后备/背包中（非上场状态），每 tick 触发一次",
+      "stackGroup": "reserve_regen",
+      "preGymAllowed": true,
+      "adventureActiveInBag": true
+    },
+
+    "double_yield_s": {
+      "tier": "S",
+      "type": "adventure",
+      "label": "回赠",
+      "label_en": "Double Yield",
+      "description": "队伍中存在该特性（背包即可），野外探索的所有奖励翻倍：金币、掉落素材。",
+      "effect": {
+        "wildRewardMultiplier": 2.0,
+        "activeInReserve": true,
+        "_comment": "仅作用于野外遭遇奖励，不影响商店交易或任务固定奖励。"
+      },
+      "bounds": {
+        "wildRewardMultiplier_min": 1.5,
+        "wildRewardMultiplier_max": 2.5
+      },
+      "triggerCondition": "队伍任意位置有该特性持有者，战斗/遭遇结算时生效",
+      "stackGroup": "wild_reward",
+      "preGymAllowed": false,
+      "_comment_preGymAllowed": "S 级，首道馆前禁止发放。"
+    },
+
+    "unyielding_s": {
+      "tier": "S",
+      "type": "battle",
+      "label": "不屈",
+      "label_en": "Unyielding",
+      "description": "战斗中持有者第一次受到致命伤害（会导致 HP≤0 的伤害）时，将 HP 保留在 1，免疫该次伤害的超额部分。每场战斗只触发一次。",
+      "effect": {
+        "oneTimeFatalBlock": true,
+        "remainHpAfterBlock": 1,
+        "resetOnBattleStart": true,
+        "_comment": "内部需要每场战斗维护 fatalBlockUsed 标志，战斗开始时重置为 false。"
+      },
+      "bounds": {},
+      "triggerCondition": "当次伤害会使 HP 从 >0 变为 ≤0，且本场 fatalBlockUsed=false",
+      "stackGroup": "fatal_block",
+      "preGymAllowed": false,
+      "_comment_preGymAllowed": "S 级，首道馆前禁止发放。"
+    }
+  },
+
+  "mercySkill": {
+    "power": 60,
+    "wildOnlySpareOneHp": true,
+    "spareOneHpMinDamage": 1,
+    "_comment_power": "仁慈技能基础威力 60，无属性。伤害计算走标准公式（无 STAB 加成）。",
+    "_comment_wildOnlySpareOneHp": "仅在 battleContext.isWild===true 时触发留 1 HP 逻辑。训练师战/道馆战/剧情 Boss 该标志为 false，不留血。",
+    "_comment_spareOneHpMinDamage": "留 1 HP 逻辑：若计算伤害 >= 目标当前 HP，则将目标 HP 设为 1（不直接 KO）。若目标 HP 已经是 1，正常造成 1 点伤害（允许 KO）。"
+  },
+
+  "ideaConflictReward": {
+    "_comment": "《理念之争》首次特殊进化奖励——数值参数，接入逻辑由主程侧负责。",
+
+    "fusionPath": {
+      "label": "融合流派",
+      "traitGranted": "fearless_stride_a",
+      "skillGranted": "mercy",
+      "statMultipliers": {
+        "attack":  1.08,
+        "defense": 1.06,
+        "maxHp":   1.08,
+        "speed":   1.22,
+        "_comment": "速度取建议区间 20%~25% 中位 +22%，体现融合流「速度机动」特色。"
+      },
+      "statMultiplierBounds": {
+        "attack_min":  1.05, "attack_max":  1.12,
+        "defense_min": 1.04, "defense_max": 1.10,
+        "maxHp_min":   1.05, "maxHp_max":   1.12,
+        "speed_min":   1.18, "speed_max":   1.28
+      }
+    },
+
+    "devourPath": {
+      "label": "吞噬流派",
+      "traitGranted": "sustain_a",
+      "skillGranted": "mercy",
+      "statMultipliers": {
+        "attack":  1.11,
+        "defense": 1.09,
+        "maxHp":   1.13,
+        "speed":   1.04,
+        "_comment": "攻击/HP 中幅提升，速度小幅提升，体现吞噬流「续航稳定」特色。"
+      },
+      "statMultiplierBounds": {
+        "attack_min":  1.08, "attack_max":  1.15,
+        "defense_min": 1.06, "defense_max": 1.12,
+        "maxHp_min":   1.10, "maxHp_max":   1.18,
+        "speed_min":   1.02, "speed_max":   1.08
+      }
+    }
+  }
+}

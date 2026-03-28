@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260328l" />
+    <link rel="stylesheet" href="styles.css?v=20260328n" />
     <!-- Title screen deps: PixiJS v8 + GSAP -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" as="style" onload="this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"></noscript>
@@ -72,6 +72,25 @@
               <button type="button" class="in-game-hud-button" data-panel="homePanelCard" title="仓库 (Y)">🏡 仓库</button>
               <button type="button" class="in-game-hud-button" data-panel="alchemyPanelCard" title="进化工坊 (R)">🜂 进化</button>
             </div>
+
+            <aside class="in-canvas-story-dock">
+              <section class="card portrait-card in-canvas-story-card">
+                <div class="section-heading">
+                  <h2>剧情立绘</h2>
+                  <span id="storyPortraitTag">Story Focus</span>
+                </div>
+                <div class="story-portrait-shell">
+                  <div id="storyPortraitFrame" class="story-portrait-frame">
+                    <span id="storyPortraitFallback">?</span>
+                  </div>
+                  <div class="story-portrait-copy">
+                    <strong id="storyPortraitName">旅途记录</strong>
+                    <p id="storyPortraitLine" class="objective-text">当前剧情焦点会显示在这里。</p>
+                    <p id="objectiveText" class="objective-text">主线目标会显示在这里。</p>
+                  </div>
+                </div>
+              </section>
+            </aside>
 
             <div id="inGameMenuOverlay" class="in-game-menu-overlay hidden" aria-hidden="true">
               <div class="in-game-menu-shell">
@@ -298,23 +317,6 @@
         </section>
 
         <aside class="sidebar">
-          <section class="card portrait-card">
-            <div class="section-heading">
-              <h2>剧情立绘</h2>
-              <span id="storyPortraitTag">Story Focus</span>
-            </div>
-            <div class="story-portrait-shell">
-              <div id="storyPortraitFrame" class="story-portrait-frame">
-                <span id="storyPortraitFallback">?</span>
-              </div>
-              <div class="story-portrait-copy">
-                <strong id="storyPortraitName">旅途记录</strong>
-                <p id="storyPortraitLine" class="objective-text">当前剧情焦点会显示在这里。</p>
-                <p id="objectiveText" class="objective-text">主线目标会显示在这里。</p>
-              </div>
-            </div>
-          </section>
-
           <section class="card">
             <div class="section-heading">
               <h2>Demo 进度看板</h2>
@@ -519,19 +521,19 @@
       </section>
     </div>
 
-<script src="src/game/title-screen.js?v=20260328m"></script>
-<script src="version.js?v=20260328m"></script>
-<script src="assets.generated.js?v=20260328m"></script>
-<script src="assets.js?v=20260328m"></script>
-<script src="src/game/globals.js?v=20260328m"></script>
-<script src="src/game/balance-config.js?v=20260328m"></script>
-<script src="src/game/bootstrap-ai.js?v=20260328m"></script>
-<script src="src/game/world-events.js?v=20260328m"></script>
-<script src="src/game/vn-dialogue.js?v=20260328m"></script>
-<script src="src/game/battle-system.js?v=20260328m"></script>
-<script src="src/game/evolution-pipeline.js?v=20260328m"></script>
-<script src="src/game/ui-panels.js?v=20260328m"></script>
-<script src="src/game/rendering.js?v=20260328m"></script>
-<script src="game.js?v=20260328m"></script>
+<script src="src/game/title-screen.js?v=20260328n"></script>
+<script src="version.js?v=20260328n"></script>
+<script src="assets.generated.js?v=20260328n"></script>
+<script src="assets.js?v=20260328n"></script>
+<script src="src/game/globals.js?v=20260328n"></script>
+<script src="src/game/balance-config.js?v=20260328n"></script>
+<script src="src/game/bootstrap-ai.js?v=20260328n"></script>
+<script src="src/game/world-events.js?v=20260328n"></script>
+<script src="src/game/vn-dialogue.js?v=20260328n"></script>
+<script src="src/game/battle-system.js?v=20260328n"></script>
+<script src="src/game/evolution-pipeline.js?v=20260328n"></script>
+<script src="src/game/ui-panels.js?v=20260328n"></script>
+<script src="src/game/rendering.js?v=20260328n"></script>
+<script src="game.js?v=20260328n"></script>
   </body>
 </html>

@@ -1,5 +1,99 @@
 ﻿# Context Log
 
+## 2026-03-28 Iteration BJ（特性系统配置落地：trait-balance.json + 总表 + 平衡模拟）
+
+### 任务目标
+- 落地 `config/trait-balance.json`，覆盖 B/A/S 6 条特性 + 仁慈技能 + 《理念之争》两线奖励数值。
+- 新建 `docs/trait-balance-table-v1.md`，含触发条件、边界、首道馆前限制、融合/吞噬模拟验证。
+
+### 本轮完成
+1. **新建** `config/trait-balance.json`：
+   - `tierPolicy.preGymAllowSTier = false`（S 级首道馆前禁投）
+   - `stackingPolicy`：同类不叠加，S>A>B 优先
+   - 6 条特性：`blaze_boost_b`、`fervor_b`、`fearless_stride_a`、`sustain_a`、`double_yield_s`、`unyielding_s`
+   - `mercySkill`：power=60，`wildOnlySpareOneHp=true`
+   - `ideaConflictReward`：融合线（速度×1.22，一往无前A）/ 吞噬线（HP×1.13，续航A）带可调区间
+2. **新建** `docs/trait-balance-table-v1.md`：
+   - B/A/S 分级总表，含触发条件、叠加组、背包生效标志
+   - 首道馆前融合线/吞噬线各 1 局数值估算（基于修改 8 伤害公式）
+   - 验收清单 8 项全部通过
+
+### 关键结论
+- **融合线 vs 吞噬线非对称等价成立**：速度机动（+22%速）vs 续航稳定（+13%HP），道馆战均需属性克制才能高效通关。
+- **B 级特性无法破坏首道馆前平衡**：单项 10% 增益不足以使草系馆主被碾压。
+- **仁慈技能接入须由主程侧确认 `isWild` 标志**，这是"留 1 HP / 不留血"的唯一判断依据。
+- **续航 tick 粒度影响体感**：建议 = 每次遭遇结算后（1 tick），若改为每步需将比率从 2% 降至 0.5% 以下。
+
+### 待主程侧处理（建议单，不在本轮范围）
+1. `battle-system.js`：读取 `traitBalance.traits[traitId]` 并在伤害计算中应用 `fireDamagePct`、`lowHpDamageMaxPct`、`oneTimeFatalBlock`。
+2. 探索逻辑：读取 `sustain_a.reserveRegenPerTickPct`，在遭遇结算后对后备精灵加血。
+3. 道馆解锁事件后：将 `tierPolicy.preGymAllowSTier` 切换为 `true`（或写入 localStorage 覆盖）。
+
+### 关键文件
+- `E:/Ai/Vibecoding_Game/config/trait-balance.json`（新增）
+- `E:/Ai/Vibecoding_Game/docs/trait-balance-table-v1.md`（新增）
+- `E:/Ai/Vibecoding_Game/docs/context-log.md`（本文件）
+
+---
+
+## 2026-03-28 Iteration BI（特性分级策划文档：B/A/S + 理念之争）
+
+### 任务目标
+- 将“特性分级”从讨论转成可执行策划规格，供数值策划直接落地。
+- 明确《理念之争》与特性系统、`仁慈` 技能、道馆引导之间的数值和流程边界。
+
+### 本轮完成
+1. 新增文档：
+   - `docs/trait-tier-balance-spec.md`
+2. 文档覆盖内容：
+   - `B/A/S` 分级定义与强度边界
+   - 稀缺投放策略（仅稀有/传说/神兽拥有特性）
+   - 《理念之争》融合/吞噬两线的数值建议与奖励结构
+   - `仁慈` 技能“仅野生战留 1 HP”的生效边界
+   - 冒险特性（背包生效）规则与冲突处理建议
+   - 可落地配置样例（`config/trait-balance.json`）与验收清单
+
+### 关键文件
+- `E:/Ai/Vibecoding_Game/docs/trait-tier-balance-spec.md`
+- `E:/Ai/Vibecoding_Game/docs/context-log.md`
+
+## 2026-03-28 Iteration BH（黄金10分钟体验收口：镜前单页 + 缔约捕捉教学）
+
+### 任务目标
+- 落地最新 P0/P1 体验要求：镜前流程单页化、玩家立绘位置收口、主线引导强化、神兽幼体捕捉教学可感知。
+
+### 本轮完成
+1. 镜前流程改为单页：
+   - 一页内完成 `名字模式（随机/自定义）`、`性别（男/女/保密）`、`立绘方案（系统预设12选1/自定义后台生成）`。
+   - 自定义立绘提交后，先应用默认立绘占位，等待后台任务完成再替换。
+2. 系统预设立绘扩容：
+   - 玩家默认立绘池扩展为高质量模板集合（含你指定的 `player_9dc5d6c1`）。
+   - 预设选择面板改为可读模板名，不再展示生硬 key。
+3. 立绘位置收口到游戏画面内：
+   - 将剧情立绘卡从侧栏迁入 `canvas` 右侧（常驻可见），避免“立绘在页面下方/外部”的割裂感。
+4. 领主宠引导强化：
+   - 镜前确认后立即追加系统引导文案，并将剧情焦点切到教授雪松，明确下一步目标。
+5. 神兽幼体捕捉教学升级：
+   - 改为“两阶段教学”：先压血，再捕捉。
+   - 教学目标锁血到 `1 HP`，达到阈值后自动切换到捕捉阶段并高亮捕捉按钮。
+   - 捕捉概率在教学中显著提升，并含失败保护。
+6. 缓存刷新：
+   - 资源版本号升级到 `v=20260328n`，减少旧页面缓存干扰。
+
+### 验证结果
+- `node --check src/game/world-events.js` 通过
+- `node --check src/game/battle-system.js` 通过
+- `node --check src/game/ui-panels.js` 通过
+- `node scripts/acceptance-interaction.mjs` 通过（`passed=6 failed=0`）
+
+### 关键文件
+- `E:/Ai/Vibecoding_Game/src/game/world-events.js`
+- `E:/Ai/Vibecoding_Game/src/game/battle-system.js`
+- `E:/Ai/Vibecoding_Game/src/game/ui-panels.js`
+- `E:/Ai/Vibecoding_Game/index.html`
+- `E:/Ai/Vibecoding_Game/styles.css`
+- `E:/Ai/Vibecoding_Game/docs/context-log.md`
+
 ## 2026-03-28 Iteration BG（合并后稳定性收口：验收脚本适配标题页）
 
 ### 任务目标
@@ -1865,8 +1959,77 @@
 - `src/game/globals.js`
 - `src/game/ui-panels.js`
 - `src/game/world-events.js`
-- `src/game/bootstrap-ai.js`
+
+## 2026-03-28（主线战斗保底修复：最低保留 1 HP）
+
+### 问题
+- 神兽幼体主线战中玩家可能被击败，导致剧情推进体验中断。
+
+### 修复
+1. 新增主线保底字段：
+   - `state.battle.mainlineFailSafe`，用于标记“主线剧情战不允许被打死”。
+2. 战斗系统接入保底：
+   - `handlePlayerFaint()` 在 `mainlineFailSafe` 开启时，自动将当前出战精灵保留到 `1 HP` 并清除异常。
+3. 生效范围：
+   - 神兽幼体缔约战（`captureTag: golden_chosen_cub`）启用保底。
+   - 主线训练师战启用保底（理念之争追猎者、洛克、维萝、馆主）。
+4. 战斗日志提示：
+   - 战斗内会显示“主线保底触发/已启用”，方便测试核对。
+
+### 验证
+- `node --check`：
+  - `src/game/battle-system.js`
+  - `src/game/world-events.js`
+  - `src/game/globals.js`
+  - `src/game/bootstrap-ai.js`
+- `node scripts/acceptance-interaction.mjs`：
+  - `passed=6 failed=0`
+
+### 关键文件
 - `src/game/battle-system.js`
+- `src/game/world-events.js`
+- `src/game/globals.js`
+- `src/game/bootstrap-ai.js`
+- `docs/context-log.md`
+
+## 2026-03-28（数值 agent 范围切分：仅特性系统）
+
+### 目标
+- 将数值 agent 工作范围锁定为“特性设计与配置”，避免跨到主线剧情实现。
+
+### 已完成
+1. 新增文档 `docs/balance-agent-traits-requirements-v1.md`。
+2. 明确 IN/OUT 边界：
+   - IN：B/A/S 特性分级、参数、配置、平衡验证。
+   - OUT：《理念之争》剧情/演出/NPC 流程/UI/美术。
+3. 固化硬约束：
+   - 仅稀有/传说/神兽可有特性；
+   - 首道馆前默认不投放 S 级；
+   - `仁慈` 仅野生战触发留 1 HP。
+
+### 关键文件
+- `docs/balance-agent-traits-requirements-v1.md`
+- `docs/context-log.md`
+
+## 2026-03-28（冒险特性分级规范：B/A/S 与数值策划任务单）
+
+### 目标
+- 将“冒险特性分级”从口头讨论固化为可执行文档，直接给数值策划使用。
+- 明确 `B / A / S` 稀缺度和前期投放边界，避免“特殊进化=廉价强度”。
+- 固化 `仁慈` 的边界：仅对野生精灵触发留 1 HP。
+
+### 已完成
+1. 新增数值策划任务文档：
+   - `docs/trait-tier-balance-spec.md`。
+   - 含分级定义、示例特性、理念之争两派收益建议、验收标准与执行清单。
+2. 文档编码修复：
+   - 将该文档转为 `UTF-8 with BOM`，避免 Windows 默认编码读取乱码。
+3. 主线引导要求对齐：
+   - 文档内新增“理念之争后必须引导去道馆”的叙事/目标栏要求。
+
+### 关键文件
+- `docs/trait-tier-balance-spec.md`
+- `docs/context-log.md`
 
 ## 2026-03-27（教学战放水：三属性首战胜率提升）
 
