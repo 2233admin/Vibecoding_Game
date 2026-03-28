@@ -118,6 +118,11 @@ window.GBIT_ASSETS_GENERATED = {
     "evo_abyssalor_devour_sword_t2": "assets/monsters/legendary/abyssalor/devour/stage2/evo_abyssalor_devour_sword_t2.jpg",
     "solaraith_s2_full_v2": "assets/monsters/legendary/solaraith/base/stage2/solaraith_s2_full_v2.jpg",
     "solaraith_s0_cub_v2": "assets/monsters/legendary/solaraith/base/stage0/solaraith_s0_cub_v2.jpg",
-    "abyssalor_s2_full_v2": "assets/monsters/legendary/abyssalor/base/stage2/abyssalor_s2_full_v2.jpg"
+    "abyssalor_s2_full_v2": "assets/monsters/legendary/abyssalor/base/stage2/abyssalor_s2_full_v2.jpg",
+    "dex_solaraith_cub_v1": "assets/monsters/normal/dex/base/stage0/dex_solaraith_cub_v1.jpg",
+    "dex_solaraith_cub_v2": "assets/monsters/normal/dex/base/stage0/dex_solaraith_cub_v2.jpg",
+    "abyssalor_s2_full_v3": "assets/monsters/legendary/abyssalor/base/stage2/abyssalor_s2_full_v3.jpg",
+    "solaraith_s2_full_v3": "assets/monsters/legendary/solaraith/base/stage2/solaraith_s2_full_v3.jpg",
+    "divine_sword_v1": "assets/monsters/normal/divine/base/stage0/divine_sword_v1.jpg"
   }
 }

@@ -76,9 +76,9 @@ const manualAssets = {
     frostplume:   "assets/monsters/legendary/frostplume/base/stage0/dex_frostplume_v1.jpg",
     // ---- 黄金10分钟神兽资产 ----
     // solaraith 完全体（开场演出 + 融合流派标志）v2: 双翼火/晶对比，融合感明确
-    solaraith_full:      "assets/monsters/legendary/solaraith/base/stage2/solaraith_s2_full_v2.jpg",
-    // abyssalor 完全体（开场演出 + 吞噬流派标志）v2: 渊海属性补全（水系旋流+深海发光纹）
-    abyssalor_full:      "assets/monsters/legendary/abyssalor/base/stage2/abyssalor_s2_full_v2.jpg",
+    solaraith_full:      "assets/monsters/legendary/solaraith/base/stage2/solaraith_s2_full_v3.jpg",
+    // abyssalor 完全体（开场演出 + 吞噬流派标志）v3: 深渊宇宙恐怖，void core 明确
+    abyssalor_full:      "assets/monsters/legendary/abyssalor/base/stage2/abyssalor_s2_full_v3.jpg",
     // 幼体（出村后必遇必捕）v2: 保持龙形血统，solaraith 幼体改为四足金色小龙
     solaraith_cub:       "assets/monsters/legendary/solaraith/base/stage0/solaraith_s0_cub_v2.jpg",
     abyssalor_cub:       "assets/monsters/legendary/abyssalor/base/stage0/abyssalor_s0_cub_v1.jpg",
@@ -87,6 +87,8 @@ const manualAssets = {
     windthorn_tutorial:  "assets/monsters/normal/windthorn/base/stage0/windthorn_tutorial_v1.jpg",
     // 吞噬教学演示（传说兽 + 神剑吞噬）
     abyssalor_devour_sword: "assets/monsters/legendary/abyssalor/devour/stage2/evo_abyssalor_devour_sword_t2.jpg",
+    // 神剑单体图（吞噬教学步骤2/3 注入权能）
+    divine_sword:        "assets/monsters/normal/divine/base/stage0/divine_sword_v1.jpg",
   },
 }
 

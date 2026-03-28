@@ -1,5 +1,44 @@
 ﻿# Context Log
 
+## 2026-03-28 Iteration BE（外部工具包使用规则同步）
+
+### 任务目标
+- 将 `ai-game-jam-toolkit` 的可用部分纳入现有协作协议，避免“全盘照搬”造成流程冲突。
+
+### 本轮完成
+1. 协作协议补充外部规则：
+   - 允许吸收 `prompts/*.md`、`ccg/consensus-gate.md`、`tips/vibecoding-speedrun.md`。
+2. 使用边界固化：
+   - `consensus-gate` 仅用于架构/重构/复杂 bug，不扩大到日常小改。
+   - 明确禁止使用 `git checkout .`。
+   - 明确当前项目不做引擎迁移，仅吸收 prompt 与协作方法。
+
+### 关键文件
+- `E:/Ai/Vibecoding_Game/docs/ai-collab-protocol.md`
+- `E:/Ai/Vibecoding_Game/docs/context-log.md`
+
+## 2026-03-28 Iteration BF（菜单内剧情立绘可见性修复）
+
+### 任务目标
+- 解决“打开游戏内菜单后看不到主角剧情立绘”的体验断层。
+
+### 本轮完成
+1. 菜单内新增剧情焦点卡：
+   - 在 `inGameMenu` 头部下方新增“剧情立绘 + 名称 + 台词”紧凑卡片。
+2. 渲染逻辑复用：
+   - `renderStoryPortraitPanel` 改为一份 `storyFocus` 同步驱动“侧栏剧情卡 + 菜单剧情卡”。
+3. 主角立绘优先级修复：
+   - 玩家说话时优先使用 `playerPortrait.activeKey`，再回退到 `player`。
+4. 缓存刷新：
+   - 资源版本号升级到 `v=20260328m`，避免浏览器继续加载旧菜单结构。
+
+### 关键文件
+- `E:/Ai/Vibecoding_Game/index.html`
+- `E:/Ai/Vibecoding_Game/styles.css`
+- `E:/Ai/Vibecoding_Game/src/game/globals.js`
+- `E:/Ai/Vibecoding_Game/src/game/ui-panels.js`
+- `E:/Ai/Vibecoding_Game/docs/context-log.md`
+
 ## 2026-03-28 Iteration BD（黄金10分钟：美术需求单拆解）
 
 ### 任务目标

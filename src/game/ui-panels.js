@@ -171,13 +171,52 @@ function renderStoryPortraitPanel() {
   const focus = state.storyFocus || normalizeLoadedStoryFocus(null, lastDialogue)
 
   state.storyFocus = focus
-  ui.storyPortraitTag.textContent = focus.tag || "Story Focus"
-  ui.storyPortraitName.textContent = focus.name
-  ui.storyPortraitLine.textContent = focus.line || lastDialogue || getObjectiveText()
+  const line = focus.line || lastDialogue || getObjectiveText()
+  applyStoryFocusView(
+    {
+      tagElement: ui.storyPortraitTag,
+      nameElement: ui.storyPortraitName,
+      lineElement: ui.storyPortraitLine,
+      frameElement: ui.storyPortraitFrame,
+      fallbackElement: ui.storyPortraitFallback,
+    },
+    focus,
+    line
+  )
+
+  if (ui.inGameMenuStoryFocus) {
+    applyStoryFocusView(
+      {
+        tagElement: ui.inGameMenuStoryPortraitTag,
+        nameElement: ui.inGameMenuStoryPortraitName,
+        lineElement: ui.inGameMenuStoryPortraitLine,
+        frameElement: ui.inGameMenuStoryPortraitFrame,
+        fallbackElement: ui.inGameMenuStoryPortraitFallback,
+      },
+      focus,
+      line
+    )
+  }
+}
+
+function applyStoryFocusView(view, focus, line) {
+  if (!view?.frameElement || !view?.fallbackElement || !focus) {
+    return
+  }
+
+  if (view.tagElement) {
+    view.tagElement.textContent = focus.tag || "Story Focus"
+  }
+  if (view.nameElement) {
+    view.nameElement.textContent = focus.name
+  }
+  if (view.lineElement) {
+    view.lineElement.textContent = line
+  }
 
   applyCharacterPortrait(
-    ui.storyPortraitFrame,
-    ui.storyPortraitFallback,
+    view.frameElement,
+    view.fallbackElement,
     focus.artKeys,
     focus.symbol,
     focus.color

@@ -2481,6 +2481,12 @@ const ui = {
   inGameMenuUtilityTabs: document.getElementById("inGameMenuUtilityTabs"),
   inGameMenuViewport: document.getElementById("inGameMenuViewport"),
   inGameMenuCloseButton: document.getElementById("inGameMenuCloseButton"),
+  inGameMenuStoryFocus: document.getElementById("inGameMenuStoryFocus"),
+  inGameMenuStoryPortraitTag: document.getElementById("inGameMenuStoryPortraitTag"),
+  inGameMenuStoryPortraitFrame: document.getElementById("inGameMenuStoryPortraitFrame"),
+  inGameMenuStoryPortraitFallback: document.getElementById("inGameMenuStoryPortraitFallback"),
+  inGameMenuStoryPortraitName: document.getElementById("inGameMenuStoryPortraitName"),
+  inGameMenuStoryPortraitLine: document.getElementById("inGameMenuStoryPortraitLine"),
   evolutionPortraitStatus: document.getElementById("evolutionPortraitStatus"),
   evolutionPortraitStatusText: document.getElementById("evolutionPortraitStatusText"),
   evolutionPortraitProgressFill: document.getElementById("evolutionPortraitProgressFill"),
@@ -2861,12 +2867,18 @@ function getSpeakerProfile(speakerId) {
         ? state.playerProfile.title.trim()
         : ""
     const displayName = title ? `${title} ${playerName}` : playerName
+    const activePlayerPortraitKey = String(state?.playerPortrait?.activeKey || "").trim()
+    const artKeys = []
+    if (activePlayerPortraitKey) {
+      artKeys.push(activePlayerPortraitKey)
+    }
+    artKeys.push("player")
     return {
       speakerId: "player",
       name: displayName,
       symbol: "主",
       color: "#5c86cf",
-      artKeys: ["player"],
+      artKeys: [...new Set(artKeys)],
       tag: "Adventure Focus",
     }
   }

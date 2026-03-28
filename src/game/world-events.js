@@ -3681,7 +3681,7 @@ async function runGoldenPathDemo(path) {
       label: "素材：神剑权能",
       description: "将神剑权能作为吞噬素材投入祭仪核心。",
       buttonLabel: "注入权能",
-      imageKeys: ["abyssalor_cub", "abyssalor"],
+      imageKeys: ["divine_sword", "abyssalor_devour_sword"],
       imageAlt: "吞噬素材",
     })
     await playEvolutionAnimation({

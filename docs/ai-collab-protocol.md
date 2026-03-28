@@ -100,3 +100,15 @@ Write-Host "通过：仅包含允许的数值相关改动。"
 - 小步快跑：每次只调一组参数（例如仅调“野怪等级”）。
 - 一次一验：每次提交后都做最小可玩验证。
 - 先保可玩，再提难度：先确保“新手村 -> 蒙德草原 -> 草系道馆”完整可通关。
+
+## 9. 外部工具包接入规则（ai-game-jam-toolkit）
+- 允许吸收内容：
+  - `prompts/*.md`：仅复制 prompt 模板给 Claude/Cursor 使用。
+  - `ccg/consensus-gate.md`：同步到 `.cursorrules`，仅用于“架构/重构/复杂 bug”场景。
+  - `tips/vibecoding-speedrun.md`：作为比赛攻略与流程参考。
+  - `speedrun` 最后一节：用于统一设计 token 与组件规范。
+- 明确禁止：
+  - 不执行 `git checkout .` 这类覆盖式回退命令，避免误删未提交改动。
+  - 不做引擎迁移（如迁到 Phaser/Kaplay），当前项目只吸收 prompt 与协作方法。
+- 落地原则：
+  - 外部规范如与本项目协议冲突，以本文件和 `docs/context-log.md` 已定规则为准。
