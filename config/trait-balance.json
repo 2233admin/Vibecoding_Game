@@ -1,5 +1,5 @@
 {
-  "_comment": "特性平衡配置 v1 — 由 Balance Agent 生成，2026-03-28",
+  "_comment": "特性平衡配置 v2 — 由 Balance Agent 生成，2026-03-29（B×15 / A×10 / S×5）",
   "_usage": "本文件由 src/game/battle-system.js 和冒险逻辑读取。改参数只改此文件，不改 JS。非法值由加载模块自动回退默认。",
 
   "tierPolicy": {
@@ -93,6 +93,308 @@
       "adventureActiveInBag": true
     },
 
+    "aqua_boost_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "水势增幅",
+      "label_en": "Aqua Boost",
+      "description": "持有者使用水系技能时，伤害提升 10%。",
+      "effect": { "aquaDamagePct": 0.10 },
+      "bounds": { "aquaDamagePct_min": 0.05, "aquaDamagePct_max": 0.15 },
+      "triggerCondition": "持有者使用属性为 water 的技能时触发",
+      "stackGroup": "type_boost",
+      "preGymAllowed": true
+    },
+
+    "flora_boost_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "草势增幅",
+      "label_en": "Flora Boost",
+      "description": "持有者使用草系技能时，伤害提升 10%。",
+      "effect": { "grassDamagePct": 0.10 },
+      "bounds": { "grassDamagePct_min": 0.05, "grassDamagePct_max": 0.15 },
+      "triggerCondition": "持有者使用属性为 grass 的技能时触发",
+      "stackGroup": "type_boost",
+      "preGymAllowed": true
+    },
+
+    "thunder_boost_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "雷势增幅",
+      "label_en": "Thunder Boost",
+      "description": "持有者使用电系技能时，伤害提升 10%。",
+      "effect": { "electricDamagePct": 0.10 },
+      "bounds": { "electricDamagePct_min": 0.05, "electricDamagePct_max": 0.15 },
+      "triggerCondition": "持有者使用属性为 electric 的技能时触发",
+      "stackGroup": "type_boost",
+      "preGymAllowed": true
+    },
+
+    "stone_surge_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "岩浪",
+      "label_en": "Stone Surge",
+      "description": "持有者使用岩系技能时，伤害提升 10%。",
+      "effect": { "rockDamagePct": 0.10 },
+      "bounds": { "rockDamagePct_min": 0.05, "rockDamagePct_max": 0.15 },
+      "triggerCondition": "持有者使用属性为 rock 的技能时触发",
+      "stackGroup": "type_boost",
+      "preGymAllowed": true
+    },
+
+    "iron_hide_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "铁鳞",
+      "label_en": "Iron Hide",
+      "description": "持有者受到的所有伤害降低 8%。",
+      "effect": { "incomingDamageReductionPct": 0.08 },
+      "bounds": { "incomingDamageReductionPct_min": 0.05, "incomingDamageReductionPct_max": 0.12 },
+      "triggerCondition": "持有者受到任意来源伤害时触发（含 DOT）",
+      "stackGroup": "damage_reduction",
+      "preGymAllowed": true
+    },
+
+    "quick_step_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "轻足",
+      "label_en": "Quick Step",
+      "description": "持有者速度属性提升 12%（乘算到基础速度上）。",
+      "effect": { "speedMultiplier": 1.12 },
+      "bounds": { "speedMultiplier_min": 1.05, "speedMultiplier_max": 1.18 },
+      "triggerCondition": "上场时永久生效，不依赖触发条件",
+      "stackGroup": "speed_boost",
+      "preGymAllowed": true
+    },
+
+    "tough_body_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "厚积",
+      "label_en": "Tough Body",
+      "description": "持有者最大 HP 提升 8%（乘算到基础最大 HP 上）。",
+      "effect": { "maxHpMultiplier": 1.08 },
+      "bounds": { "maxHpMultiplier_min": 1.05, "maxHpMultiplier_max": 1.12 },
+      "triggerCondition": "上场/编队时永久生效",
+      "stackGroup": "hp_boost",
+      "preGymAllowed": true
+    },
+
+    "last_gasp_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "背水",
+      "label_en": "Last Gasp",
+      "description": "持有者 HP 低于 25% 时，攻击提升 15%。",
+      "effect": {
+        "lowHpDamageMaxPct": 0.15,
+        "lowHpThresholdPct": 0.25,
+        "_comment": "触发门槛比「奋勇」更严苛（25% vs 50%），但增伤相同，适合高风险流派。增伤为固定值，不做线性插值。"
+      },
+      "bounds": { "lowHpDamageMaxPct_min": 0.10, "lowHpDamageMaxPct_max": 0.20 },
+      "triggerCondition": "持有者当前 HP < maxHp × 25% 时固定增伤 +15%",
+      "stackGroup": "low_hp_boost",
+      "preGymAllowed": true
+    },
+
+    "mend_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "战愈",
+      "label_en": "Mend",
+      "description": "每场战斗结束后（无论胜负），持有者回复最大 HP 的 6%。",
+      "effect": { "postBattleRegenPct": 0.06 },
+      "bounds": { "postBattleRegenPct_min": 0.04, "postBattleRegenPct_max": 0.10 },
+      "triggerCondition": "战斗结算后触发，持有者 HP > 0 时有效（未被 KO）",
+      "stackGroup": "post_battle_regen",
+      "preGymAllowed": true
+    },
+
+    "first_strike_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "先手",
+      "label_en": "First Strike",
+      "description": "战斗首回合，持有者造成伤害提升 12%。",
+      "effect": { "firstRoundDamagePct": 0.12 },
+      "bounds": { "firstRoundDamagePct_min": 0.08, "firstRoundDamagePct_max": 0.18 },
+      "triggerCondition": "当前为战斗第 1 回合（roundIndex === 0）",
+      "stackGroup": "first_round_boost",
+      "preGymAllowed": true
+    },
+
+    "steadfast_b": {
+      "tier": "B",
+      "type": "battle",
+      "label": "坚守",
+      "label_en": "Steadfast",
+      "description": "持有者防御属性提升 10%（乘算到基础防御上）。",
+      "effect": { "defenseMultiplier": 1.10 },
+      "bounds": { "defenseMultiplier_min": 1.05, "defenseMultiplier_max": 1.15 },
+      "triggerCondition": "上场时永久生效",
+      "stackGroup": "defense_boost",
+      "preGymAllowed": true
+    },
+
+    "scavenger_b": {
+      "tier": "B",
+      "type": "adventure",
+      "label": "拾荒",
+      "label_en": "Scavenger",
+      "description": "队伍中存在该特性（背包即可），野外遭遇时道具掉落概率提升 15%。",
+      "effect": { "wildItemDropRatePct": 0.15, "activeInReserve": true },
+      "bounds": { "wildItemDropRatePct_min": 0.08, "wildItemDropRatePct_max": 0.25 },
+      "triggerCondition": "野外战斗/遭遇道具掉落判定时触发",
+      "stackGroup": "item_drop_rate",
+      "preGymAllowed": true,
+      "adventureActiveInBag": true
+    },
+
+    "gold_nose_b": {
+      "tier": "B",
+      "type": "adventure",
+      "label": "嗅金",
+      "label_en": "Gold Nose",
+      "description": "队伍中存在该特性（背包即可），战斗胜利金币奖励提升 12%。",
+      "effect": { "battleCoinBonusPct": 0.12, "activeInReserve": true },
+      "bounds": { "battleCoinBonusPct_min": 0.08, "battleCoinBonusPct_max": 0.20 },
+      "triggerCondition": "战斗胜利结算时触发",
+      "stackGroup": "coin_boost",
+      "preGymAllowed": true,
+      "adventureActiveInBag": true
+    },
+
+    "intimidate_a": {
+      "tier": "A",
+      "type": "battle",
+      "label": "慑服",
+      "label_en": "Intimidate",
+      "description": "战斗开始时，对手当回合攻击降低 20%。效果在首回合结束后消失。",
+      "effect": {
+        "onBattleStartEnemyAtkDebuffPct": 0.20,
+        "debuffDuration": 1,
+        "_comment": "仅对首回合有效，不叠加。多只持有者同时出战时只触发一次（stackGroup 控制）。"
+      },
+      "bounds": { "onBattleStartEnemyAtkDebuffPct_min": 0.12, "onBattleStartEnemyAtkDebuffPct_max": 0.30 },
+      "triggerCondition": "持有者上场时，对当前对手施加首回合攻击 debuff",
+      "stackGroup": "entry_debuff",
+      "preGymAllowed": true
+    },
+
+    "underdog_a": {
+      "tier": "A",
+      "type": "battle",
+      "label": "以弱胜强",
+      "label_en": "Underdog",
+      "description": "持有者等级严格低于对手时，造成伤害提升 25%。",
+      "effect": { "lowerLevelDamagePct": 0.25 },
+      "bounds": { "lowerLevelDamagePct_min": 0.15, "lowerLevelDamagePct_max": 0.35 },
+      "triggerCondition": "持有者 level < 对手 level（严格小于）",
+      "stackGroup": "level_disadvantage_boost",
+      "preGymAllowed": true
+    },
+
+    "poacher_a": {
+      "tier": "A",
+      "type": "adventure",
+      "label": "猎手",
+      "label_en": "Poacher",
+      "description": "队伍中存在该特性（背包即可），所有捕捉球的基础成功率提升 25%（加算）。",
+      "effect": { "catchRateFlatBonus": 0.25, "activeInReserve": true },
+      "bounds": { "catchRateFlatBonus_min": 0.15, "catchRateFlatBonus_max": 0.40 },
+      "triggerCondition": "投掷捕捉球时，在最终成功率计算中加算",
+      "stackGroup": "catch_rate",
+      "preGymAllowed": true,
+      "adventureActiveInBag": true
+    },
+
+    "keen_sense_a": {
+      "tier": "A",
+      "type": "battle",
+      "label": "感知",
+      "label_en": "Keen Sense",
+      "description": "持有者使用克制属性技能时，属性相性倍率额外提升 20%（乘算）。",
+      "effect": {
+        "typeEffectivenessBonus": 0.20,
+        "_comment": "仅在 effectiveness > 1.0 时触发。2× 变为 2.4×，4× 变为 4.8×。不影响抵抗/免疫。"
+      },
+      "bounds": { "typeEffectivenessBonus_min": 0.10, "typeEffectivenessBonus_max": 0.30 },
+      "triggerCondition": "技能对目标属性相性 > 1.0 时触发",
+      "stackGroup": "type_effectiveness_boost",
+      "preGymAllowed": true
+    },
+
+    "battle_frenzy_a": {
+      "tier": "A",
+      "type": "battle",
+      "label": "连战亢奋",
+      "label_en": "Battle Frenzy",
+      "description": "每场战斗中，每击败一只精灵，持有者攻击临时提升 8%，最多叠 3 层（上限 +24%）。战斗结束后重置。",
+      "effect": {
+        "perKillAtkBonusPct": 0.08,
+        "maxStacks": 3,
+        "resetOnBattleEnd": true,
+        "_comment": "击败统计为本场战斗内持有者亲自造成 KO 的次数，非队伍总击败数。"
+      },
+      "bounds": {
+        "perKillAtkBonusPct_min": 0.05, "perKillAtkBonusPct_max": 0.12,
+        "maxStacks_min": 2, "maxStacks_max": 5
+      },
+      "triggerCondition": "持有者亲自 KO 一只精灵，每次触发一层，最多 3 层",
+      "stackGroup": "kill_stack_atk",
+      "preGymAllowed": true
+    },
+
+    "exp_surge_a": {
+      "tier": "A",
+      "type": "adventure",
+      "label": "学识",
+      "label_en": "Exp Surge",
+      "description": "队伍中存在该特性（背包即可），所有成员获得的经验值提升 25%。",
+      "effect": { "expMultiplier": 1.25, "activeInReserve": true },
+      "bounds": { "expMultiplier_min": 1.15, "expMultiplier_max": 1.40 },
+      "triggerCondition": "战斗胜利/捕捉结算经验时触发",
+      "stackGroup": "exp_rate",
+      "preGymAllowed": true,
+      "adventureActiveInBag": true
+    },
+
+    "phantom_step_a": {
+      "tier": "A",
+      "type": "adventure",
+      "label": "幽步",
+      "label_en": "Phantom Step",
+      "description": "队伍中存在该特性（背包即可），野外遭遇触发概率降低 30%。",
+      "effect": { "encounterRateReductionPct": 0.30, "activeInReserve": true },
+      "bounds": { "encounterRateReductionPct_min": 0.15, "encounterRateReductionPct_max": 0.50 },
+      "triggerCondition": "每步移动随机触发遭遇判定时，在基础概率上乘以 (1 - 0.30)",
+      "stackGroup": "encounter_rate",
+      "preGymAllowed": true,
+      "adventureActiveInBag": true
+    },
+
+    "guardian_a": {
+      "tier": "A",
+      "type": "battle",
+      "label": "守护本能",
+      "label_en": "Guardian",
+      "description": "本场战斗中，若同队任意精灵 HP 降至 30% 以下（含已 KO），持有者出场攻击提升 20%，持续至战斗结束。",
+      "effect": {
+        "allyLowHpAtkBonusPct": 0.20,
+        "allyLowHpThresholdPct": 0.30,
+        "bonusPersistsInBattle": true,
+        "_comment": "已 KO 的队友也计入触发条件。触发后 bonus 不重置，即使受伤队友恢复 HP。"
+      },
+      "bounds": { "allyLowHpAtkBonusPct_min": 0.12, "allyLowHpAtkBonusPct_max": 0.30 },
+      "triggerCondition": "持有者上场时或队内精灵 HP 变化时检测，满足条件立即激活",
+      "stackGroup": "ally_state_boost",
+      "preGymAllowed": true
+    },
+
     "double_yield_s": {
       "tier": "S",
       "type": "adventure",
@@ -129,6 +431,68 @@
       "bounds": {},
       "triggerCondition": "当次伤害会使 HP 从 >0 变为 ≤0，且本场 fatalBlockUsed=false",
       "stackGroup": "fatal_block",
+      "preGymAllowed": false,
+      "_comment_preGymAllowed": "S 级，首道馆前禁止发放。"
+    },
+
+    "apex_dominance_s": {
+      "tier": "S",
+      "type": "battle",
+      "label": "顶点法则",
+      "label_en": "Apex Dominance",
+      "description": "对野生精灵战斗时，持有者攻击提升 40%，且对手无法主动逃跑。",
+      "effect": {
+        "wildAtkBonusPct": 0.40,
+        "preventWildFlee": true,
+        "_comment": "仅对 isWild=true 的战斗生效。防逃效果配合仁慈技能可实现「必捉」流。"
+      },
+      "bounds": { "wildAtkBonusPct_min": 0.25, "wildAtkBonusPct_max": 0.55 },
+      "triggerCondition": "isWild=true 的战斗中全程生效",
+      "stackGroup": "wild_atk_boost",
+      "preGymAllowed": false,
+      "_comment_preGymAllowed": "S 级，首道馆前禁止发放。"
+    },
+
+    "legend_aura_s": {
+      "tier": "S",
+      "type": "adventure",
+      "label": "传说光环",
+      "label_en": "Legend Aura",
+      "description": "队伍中存在该特性（背包即可），全队所有精灵攻击和速度各提升 12%。",
+      "effect": {
+        "teamAtkMultiplier": 1.12,
+        "teamSpdMultiplier": 1.12,
+        "activeInReserve": true,
+        "_comment": "与单体属性乘区分开来，为独立光环倍率，不与 quick_step_b/steadfast_b 同组叠加。应用顺序：基础属性 × 特性倍率 × 光环倍率。"
+      },
+      "bounds": {
+        "teamAtkMultiplier_min": 1.06, "teamAtkMultiplier_max": 1.20,
+        "teamSpdMultiplier_min": 1.06, "teamSpdMultiplier_max": 1.20
+      },
+      "triggerCondition": "队伍任意位置有该持有者，全队战斗属性计算时叠加",
+      "stackGroup": "team_aura",
+      "preGymAllowed": false,
+      "_comment_preGymAllowed": "S 级，首道馆前禁止发放。"
+    },
+
+    "rebirth_s": {
+      "tier": "S",
+      "type": "battle",
+      "label": "涅槃",
+      "label_en": "Rebirth",
+      "description": "每场战斗中，持有者首次被 KO 时，以 40% 最大 HP 原地复活，并获得 1 回合完全免疫（免疫所有伤害）。每场只触发一次。",
+      "effect": {
+        "oneTimeRevivePct": 0.40,
+        "reviveImmunityRounds": 1,
+        "resetOnBattleStart": true,
+        "_comment": "复活后免疫期结束前不可再次触发。持有者被换下场后重新上场不重置本场计数。"
+      },
+      "bounds": {
+        "oneTimeRevivePct_min": 0.25, "oneTimeRevivePct_max": 0.50,
+        "reviveImmunityRounds_min": 1, "reviveImmunityRounds_max": 2
+      },
+      "triggerCondition": "持有者受致命伤害且本场 rebirthUsed=false 时触发",
+      "stackGroup": "revival",
       "preGymAllowed": false,
       "_comment_preGymAllowed": "S 级，首道馆前禁止发放。"
     }

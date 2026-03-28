@@ -31,7 +31,8 @@ window.GBIT_ASSETS_GENERATED = {
     "male_mystery_v1": "assets/characters/player/male_mystery_v1.jpg",
     "player_e7b99ca4": "assets/characters/player/player_e7b99ca4.jpg",
     "player_145cc6c0": "assets/characters/player/player_145cc6c0.jpg",
-    "alchemist": "assets/characters/npc/alchemist.jpg"
+    "alchemist": "assets/characters/npc/alchemist.jpg",
+    "doctrine_envoy": "assets/characters/npc/doctrine_envoy.jpg"
   },
   "monsters": {
     "preset_blazehound_fire_elemental": "assets/monsters/normal/blazehound/fusion/stage1/preset_blazehound_fire_elemental.jpg",
@@ -129,6 +130,7 @@ window.GBIT_ASSETS_GENERATED = {
     "dex_abyssalor_cub_v2": "assets/monsters/normal/dex/base/stage0/dex_abyssalor_cub_v2.jpg",
     "dex_abyssalor_cub_v1": "assets/monsters/normal/dex/base/stage0/dex_abyssalor_cub_v1.jpg",
     "dex_sporemarch_v1": "assets/monsters/normal/sporemarch/base/stage0/dex_sporemarch_v1.jpg",
-    "dex_sporemarch_v2": "assets/monsters/normal/sporemarch/base/stage0/dex_sporemarch_v2.jpg"
+    "dex_sporemarch_v2": "assets/monsters/normal/sporemarch/base/stage0/dex_sporemarch_v2.jpg",
+    "evo_solaraith_cub_grass_resonance_t2": "assets/monsters/legendary/solaraith/fusion/stage2/evo_solaraith_cub_grass_resonance_t2.jpg"
   }
 }

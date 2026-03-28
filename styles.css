@@ -1370,8 +1370,10 @@ body.in-game-menu-open .in-game-hud {
 }
 
 .choice-overlay {
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+  overflow-y: auto;
+  padding-block: clamp(10px, 2vh, 22px);
 }
 
 .save-menu-overlay {
@@ -1655,6 +1657,7 @@ body.in-game-menu-open .in-game-hud {
 
 .choice-card {
   width: min(760px, 100%);
+  max-height: calc(100% - 8px);
   padding: 28px;
   border-radius: 30px;
   color: #fffefb;
@@ -1663,6 +1666,7 @@ body.in-game-menu-open .in-game-hud {
     rgba(58, 78, 99, 0.76);
   border: 1px solid rgba(255, 255, 255, 0.24);
   box-shadow: 0 26px 46px rgba(26, 33, 40, 0.24);
+  overflow-y: auto;
 }
 
 .choice-overlay[data-theme="mirror"] .choice-card {

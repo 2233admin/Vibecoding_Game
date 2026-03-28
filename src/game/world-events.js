@@ -998,9 +998,10 @@ function triggerChosenLegendCubEncounter() {
     return
   }
 
-  if ((Number(state.player.balls) || 0) <= 0) {
-    state.player.balls = 1
-    addDialogue("系统补给: 缔约教学补发精灵球 x1。")
+  if ((Number(state.player.balls) || 0) < 5) {
+    const refillCount = 5 - Math.max(0, Number(state.player.balls) || 0)
+    state.player.balls = 5
+    addDialogue(`系统补给: 缔约教学补发精灵球 x${refillCount}。`)
   }
 
   state.flags.goldenLegendCubEncountered = true
@@ -1010,13 +1011,15 @@ function triggerChosenLegendCubEncounter() {
   addDialogue("系统教学: 先把它压到残血。目标会锁定在 1 HP，不会被直接击倒。")
   startWildBattle({
     pool: [{ speciesId: cubSpeciesId, minLevel: 6, maxLevel: 6, weight: 1 }],
-    forceLevel: 6,
+    forceLevel: 5,
     openingLine: `缔约捕捉教学：先把 ${speciesData[cubSpeciesId].name} 压到残血，再投掷精灵球完成契约。`,
-    forceCaptureSuccess: false,
+    forceCaptureSuccess: true,
     captureTutorial: true,
     captureTutorialMode: "weaken_then_capture",
     captureTutorialHpFloor: 1,
     captureTutorialTargetHpRate: 0.18,
+    captureTutorialEnemyDamageMultiplier: 0.45,
+    captureTutorialPlayerDamageMultiplier: 1.25,
     disableRun: true,
     mainlineFailSafe: true,
     captureTag: "golden_chosen_cub",
@@ -2001,6 +2004,15 @@ function interactProfessor() {
       addDialogue("教授雪松: 先在草原完成一次吞噬或融合实操，你会明显感受到队伍节奏变化。")
       queueSave()
     }
+    if (state.flags.goldenLegendCubCaptured && !state.flags.ideologyConflictResolved) {
+      if (!state.flags.ideologyConflictStarted) {
+        addDialogue("教授雪松: 花冠大道有同盟教众在求援，你先去处理《理念之争》。")
+        addDialogue("教授雪松: 这会决定你神兽幼体的第一重觉醒方向。")
+      } else {
+        addDialogue("教授雪松: 先完成《理念之争》并击退追猎者，再继续图鉴采样。")
+      }
+      return
+    }
     addDialogue(
       `教授雪松: 去花冠大道捕捉 2 只野生怪兽。你当前已经捕捉了 ${state.progress.wildCaptures} / 2。`
     )
@@ -2008,6 +2020,10 @@ function interactProfessor() {
   }
 
   if (state.storyStage === 2) {
+    if (!state.flags.ideologyConflictResolved) {
+      addDialogue("教授雪松: 先处理《理念之争》。教派冲突不解决，洛克不会放你过封锁线。")
+      return
+    }
     if (!state.flags.scoutDefeated) {
       addDialogue("教授雪松: 蚀星组织的先遣正在花冠大道封路。先击败他。")
       return
@@ -2162,6 +2178,59 @@ function findChosenLegendCubInRoster() {
   return null
 }
 
+function ensureChosenLegendCubInParty() {
+  const cubSpeciesId = String(state.progress?.chosenLegendaryCubSpeciesId || "").trim()
+  if (!cubSpeciesId) {
+    return null
+  }
+  const partyList = Array.isArray(state.player.party) ? state.player.party : []
+  const reserveList = Array.isArray(state.player.reserve) ? state.player.reserve : []
+  const homeList = Array.isArray(state.player.home) ? state.player.home : []
+
+  const inPartyIndex = partyList.findIndex((monster) => monster?.speciesId === cubSpeciesId)
+  if (inPartyIndex >= 0) {
+    return partyList[inPartyIndex]
+  }
+
+  let cub = null
+  let sourcePool = ""
+  const reserveIndex = reserveList.findIndex((monster) => monster?.speciesId === cubSpeciesId)
+  if (reserveIndex >= 0) {
+    cub = reserveList.splice(reserveIndex, 1)[0]
+    sourcePool = "reserve"
+  } else {
+    const homeIndex = homeList.findIndex((monster) => monster?.speciesId === cubSpeciesId)
+    if (homeIndex >= 0) {
+      cub = homeList.splice(homeIndex, 1)[0]
+      sourcePool = "home"
+    }
+  }
+
+  if (!cub) {
+    return null
+  }
+
+  if (partyList.length >= MAX_PARTY_SIZE) {
+    const swappedOut = partyList.pop()
+    if (swappedOut) {
+      if (sourcePool === "home") {
+        homeList.push(swappedOut)
+      } else {
+        reserveList.push(swappedOut)
+      }
+      addDialogue(`系统: 已将 ${speciesData[swappedOut.speciesId].name} 暂时调离队伍，为神兽幼体腾出出战位。`)
+    }
+  }
+
+  partyList.push(cub)
+  state.player.party = partyList
+  state.player.reserve = reserveList
+  state.player.home = homeList
+  state.player.activeIndex = Math.max(0, partyList.findIndex((monster) => monster?.uid === cub.uid))
+  addDialogue(`系统: ${speciesData[cub.speciesId].name} 已编入当前队伍并设为出战位。`)
+  return cub
+}
+
 function hasDoctrinePathEvolution(path, monster) {
   if (!monster) {
     return false
@@ -2257,8 +2326,8 @@ function openDoctrineEvolutionGuidance(path) {
       buttonLabel: "立即执行",
       onSelect: () => {
         closeChoice()
-        const cubRecord = findChosenLegendCubInRoster()
-        if (!cubRecord?.monster) {
+        const cubMonster = ensureChosenLegendCubInParty()
+        if (!cubMonster) {
           addDialogue("系统: 未找到神兽幼体，无法开始觉醒。")
           return
         }
@@ -2267,10 +2336,12 @@ function openDoctrineEvolutionGuidance(path) {
           if (!material) {
             return
           }
+          const essence = getPlayerEssence()
+          essence.arcane = Math.max(1, Number(essence.arcane) || 0)
           changeMap("home", 11, 4, "你传送到家园融合台。辰铃已将神兽幼体与白翼素材接入流程。")
           syncUi()
           if (ui.fusionTargetSelect) {
-            ui.fusionTargetSelect.value = cubRecord.monster.uid
+            ui.fusionTargetSelect.value = cubMonster.uid
           }
           if (ui.fusionPartnerSelect) {
             ui.fusionPartnerSelect.value = material.uid
@@ -2281,7 +2352,7 @@ function openDoctrineEvolutionGuidance(path) {
           changeMap("home", 5, 8, "你传送到家园吞噬台。残破圣剑已完成绑定。")
           syncUi()
           if (ui.devourTargetSelect) {
-            ui.devourTargetSelect.value = cubRecord.monster.uid
+            ui.devourTargetSelect.value = cubMonster.uid
           }
           if (ui.devourElementSelect) {
             ui.devourElementSelect.value = "weapon"
@@ -2313,8 +2384,8 @@ function interactDoctrineEnvoy() {
   }
   const path = getDoctrinePath()
   const pathLabel = path === "fusion" ? "融合" : "吞噬"
-  const cubRecord = findChosenLegendCubInRoster()
-  if (!cubRecord?.monster) {
+  const cubMonster = ensureChosenLegendCubInParty()
+  if (!cubMonster) {
     addDialogue("同盟教众 辰铃: 你的神兽幼体不在队伍体系里，先整理后再来。")
     return
   }
@@ -2351,20 +2422,22 @@ function interactDoctrineEnvoy() {
     return
   }
 
-  if (!hasDoctrinePathEvolution(path, cubRecord.monster)) {
+  if (!hasDoctrinePathEvolution(path, cubMonster)) {
     addDialogue(`同盟教众 辰铃: 你还没完成${pathLabel}觉醒。先把神兽幼体进化了，我们才有胜算。`)
     openDoctrineEvolutionGuidance(path)
     return
   }
 
   if (!state.flags.ideologyBlessingApplied) {
-    applyDoctrineBlessing(cubRecord.monster, path)
+    applyDoctrineBlessing(cubMonster, path)
   }
   if (!state.flags.ideologyMercyGranted) {
-    grantDoctrineMercySkill(cubRecord.monster)
+    grantDoctrineMercySkill(cubMonster)
   }
   if (!state.flags.ideologyBattleWon) {
     addDialogue("同盟教众 辰铃: 追猎者到了。用你刚觉醒的幼体，证明你的理念。")
+    state.player.activeIndex = Math.max(0, state.player.party.findIndex((monster) => monster?.uid === cubMonster.uid))
+    cubMonster.currentHp = Math.max(1, cubMonster.currentHp)
     startTrainerBattle("ideology_hunter")
     return
   }
@@ -4284,25 +4357,43 @@ function finalizeGoldenPrologue() {
 }
 
 function openProloguePortraitChoice() {
+  const gender = normalizePlayerGender(state.playerProfile?.gender || "unknown")
+  const previewKeys = getSystemDefaultPlayerPortraitKeys(gender)
+  const previewKey = previewKeys[0] || resolveMirrorPendingPortraitFallbackKey(gender)
   openChoice("镜前立绘选择", [
     {
       label: "系统默认精美立绘",
-      description: "从预设高质量立绘池中随机挑选并立即应用。",
-      buttonLabel: "直接应用",
+      description: `进入预设库手动挑选（${previewKeys.length} 套可选），支持预览与风格说明。`,
+      buttonLabel: "进入预设库",
+      imageSrc: ART_MANIFEST?.characters?.[previewKey] || "",
+      imageAlt: previewKey || "preset portrait preview",
       onSelect: () => {
         closeChoice()
-        applySystemDefaultPlayerPortrait()
-        finalizeGoldenPrologue()
+        openSystemDefaultPlayerPortraitChoice("prologue", {
+          onApplied: () => {
+            finalizeGoldenPrologue()
+          },
+        })
       },
     },
     {
-      label: "自定义提示词生成",
-      description: "输入你想要的主角形象提示词，后台生成后自动通知。",
-      buttonLabel: "提交生成",
+      label: "自定义立绘生成",
+      description: "输入提示词（或随机模板），后台生成完成后自动提醒；生成期间使用默认立绘。",
+      buttonLabel: "提交并进入主线",
       formFields: [
         {
-          key: "prompt",
-          label: "提示词（中文可用）",
+          key: "promptMode",
+          label: "提示词模式",
+          type: "select",
+          options: [
+            { value: "template", label: "随机模板（推荐）" },
+            { value: "custom", label: "手动填写" },
+          ],
+          value: "template",
+        },
+        {
+          key: "customPrompt",
+          label: "手动提示词（模式=手动填写时生效）",
           type: "textarea",
           rows: 4,
           maxLength: 360,
@@ -4314,21 +4405,15 @@ function openProloguePortraitChoice() {
         },
       ],
       onSelect: (payload = {}) => {
-        if (!submitProloguePortraitPrompt(payload.prompt, "系统: 已提交你的镜前立绘生成请求。")) {
-          return
-        }
-        closeChoice()
-        finalizeGoldenPrologue()
-      },
-    },
-    {
-      label: "随机模板自动生成",
-      description: "根据性别偏好随机一套模板并自动提交。",
-      buttonLabel: "随机生成",
-      onSelect: () => {
-        const randomStyle = getRandomPlayerPromptTemplate(state.playerProfile?.gender || "unknown")
-        const prompt = buildOpeningPortraitPrompt(state.playerName, randomStyle)
-        if (!submitProloguePortraitPrompt(prompt, "系统: 已使用随机模板提交镜前立绘。")) {
+        const fallbackPortraitKey = resolveMirrorPendingPortraitFallbackKey(gender)
+        applySystemDefaultPlayerPortraitByKey(fallbackPortraitKey, { silent: true })
+        const promptMode = String(payload.promptMode || "template").trim().toLowerCase()
+        const prompt =
+          promptMode === "custom"
+            ? String(payload.customPrompt || "").trim() ||
+              buildOpeningPortraitPrompt(state.playerName, getRandomPlayerPromptTemplate(gender))
+            : buildOpeningPortraitPrompt(state.playerName, getRandomPlayerPromptTemplate(gender))
+        if (!submitProloguePortraitPrompt(prompt, "系统: 已提交自定义立绘任务。生成完成前将先使用默认立绘。")) {
           return
         }
         closeChoice()
@@ -4348,18 +4433,11 @@ function openMirrorIdentityChoice() {
         ? "male"
         : "unknown"
 
-  const presetPortraitKeys = GOLDEN_MIRROR_PRESET_PORTRAIT_KEYS.filter((key) =>
-    Boolean(ART_MANIFEST?.characters?.[key])
-  )
-  const fallbackPresetKey =
-    presetPortraitKeys[0] || getSystemDefaultPlayerPortraitKeys("unknown")[0] || "player"
-
-  openChoice("梦醒镜前：登记身份与立绘（单页）", [
+  openChoice("梦醒镜前：登记身份", [
     {
       label: "训练家档案设置",
-      description:
-        "同一页面完成：名字（随机/自定义）、性别（男/女/保密）、立绘方案（系统12套/自定义生成）。",
-      buttonLabel: "确认并进入主线",
+      description: "先确认名字与性别，下一步进入立绘二选一（系统默认 / 自定义）。",
+      buttonLabel: "确认身份并继续",
       imageSrc: getGoldenMirrorIdentityImageSrc(),
       imageAlt: "镜前身份与立绘设置",
       formFields: [
@@ -4392,42 +4470,6 @@ function openMirrorIdentityChoice() {
           ],
           value: genderDefault,
         },
-        {
-          key: "portraitMode",
-          label: "立绘方案",
-          type: "select",
-          options: [
-            { value: "preset", label: "系统预设（12套可选）" },
-            { value: "custom", label: "自定义生成（后台任务）" },
-          ],
-          value: "preset",
-        },
-        {
-          key: "presetPortraitKey",
-          label: "系统预设立绘（立绘方案=系统预设时生效）",
-          type: "select",
-          options: presetPortraitKeys.map((key) => ({ value: key, label: getPlayerPortraitTemplateLabel(key) })),
-          value: fallbackPresetKey,
-        },
-        {
-          key: "customPromptMode",
-          label: "自定义生成提示词",
-          type: "select",
-          options: [
-            { value: "template", label: "随机模板（推荐）" },
-            { value: "custom", label: "手动填写" },
-          ],
-          value: "template",
-        },
-        {
-          key: "customPrompt",
-          label: "手动提示词（提示词模式=手动填写时生效）",
-          type: "textarea",
-          rows: 4,
-          maxLength: 360,
-          placeholder: "例如：少年训练家，机能风短外套，明亮动漫立绘，纯白背景",
-          value: "",
-        },
       ],
       onSelect: (payload = {}) => {
         const nameMode = String(payload.nameMode || "random").trim().toLowerCase()
@@ -4457,29 +4499,9 @@ function openMirrorIdentityChoice() {
           }
         }
 
-        const portraitMode = String(payload.portraitMode || "preset").trim().toLowerCase()
-        if (portraitMode === "custom") {
-          const fallbackPortraitKey = resolveMirrorPendingPortraitFallbackKey(gender)
-          applySystemDefaultPlayerPortraitByKey(fallbackPortraitKey, { silent: true })
-          const promptMode = String(payload.customPromptMode || "template").trim().toLowerCase()
-          const prompt =
-            promptMode === "custom"
-              ? String(payload.customPrompt || "").trim() ||
-                buildOpeningPortraitPrompt(playerName, getRandomPlayerPromptTemplate(gender))
-              : buildOpeningPortraitPrompt(playerName, getRandomPlayerPromptTemplate(gender))
-          submitProloguePortraitPrompt(prompt, "系统: 已提交自定义立绘任务。生成完成前将先使用默认立绘。")
-        } else {
-          const preferredPresetKey = String(payload.presetPortraitKey || "").trim()
-          const selectedPresetKey = presetPortraitKeys.includes(preferredPresetKey)
-            ? preferredPresetKey
-            : fallbackPresetKey
-          applySystemDefaultPlayerPortraitByKey(selectedPresetKey, { silent: true })
-          addDialogue(`系统: 已应用系统预设立绘「${getPlayerPortraitTemplateLabel(selectedPresetKey)}」。`)
-        }
-
         closeChoice()
         addDialogue(`你在镜前确认了身份：${state.playerProfile.title}${playerName}（${getPlayerGenderLabel(gender)}）。`)
-        finalizeGoldenPrologue()
+        openProloguePortraitChoice()
       },
     },
   ])
@@ -4664,6 +4686,28 @@ function getPlayerPortraitTemplateLabel(key) {
   return labels[key] || key
 }
 
+function getPlayerPortraitTemplateDescription(key) {
+  const descriptions = {
+    player: "标准主角风，通用冒险气质。",
+    player_9dc5d6c1: "清爽型旅者，明亮配色，首发推荐。",
+    player_653f3455: "稳重型旅者，偏实战与探索风。",
+    player_53ddf5e8: "灵动型旅者，适合轻快冒险氛围。",
+    female_urban_v1: "都市感少女风格。",
+    female_scholar_v1: "学院派少女风格。",
+    female_wild_v1: "荒野系少女风格。",
+    female_fairy_v1: "灵光系少女风格。",
+    female_energetic_v1: "元气系少女风格。",
+    female_mature_v1: "沉稳系少女风格。",
+    male_hotblood_v1: "热血少年风格。",
+    male_cool_v1: "冷峻少年风格。",
+    male_artistic_v1: "文艺少年风格。",
+    male_rugged_v1: "硬派少年风格。",
+    male_sunny_v1: "晴朗少年风格。",
+    male_mystery_v1: "神秘少年风格。",
+  }
+  return descriptions[key] || "系统预设立绘。"
+}
+
 function resolveMirrorPendingPortraitFallbackKey(gender = "unknown") {
   const preferred = ["player_9dc5d6c1", "player_653f3455", "player_53ddf5e8", "player"]
   for (const key of preferred) {
@@ -4722,7 +4766,7 @@ function applySystemDefaultPlayerPortrait() {
   return applySystemDefaultPlayerPortraitByKey(key, { silent: false })
 }
 
-function openSystemDefaultPlayerPortraitChoice(source = "tutorial") {
+function openSystemDefaultPlayerPortraitChoice(source = "tutorial", options = {}) {
   const gender = state.playerProfile?.gender || "unknown"
   const keys = getSystemDefaultPlayerPortraitKeys(gender)
   if (keys.length <= 0) {
@@ -4732,7 +4776,7 @@ function openSystemDefaultPlayerPortraitChoice(source = "tutorial") {
 
   openChoice("系统精美立绘：选择并应用", keys.map((key) => ({
     label: getPlayerPortraitTemplateLabel(key),
-    description: `来源：系统预置 · 性别偏好：${getPlayerGenderLabel(gender)}`,
+    description: `${getPlayerPortraitTemplateDescription(key)} · 性别偏好：${getPlayerGenderLabel(gender)}`,
     buttonLabel: "使用这张立绘",
     imageSrc: ART_MANIFEST?.characters?.[key] || "",
     imageAlt: key,
@@ -4743,6 +4787,9 @@ function openSystemDefaultPlayerPortraitChoice(source = "tutorial") {
         addDialogue(`系统: 已从功能面板应用系统立绘（${key}）。`)
       } else {
         addDialogue(`系统: 已为你应用系统默认精美立绘（${getPlayerGenderLabel(gender)}池）。`)
+      }
+      if (typeof options.onApplied === "function") {
+        options.onApplied(key)
       }
     },
   })))
@@ -4892,6 +4939,9 @@ function startWildBattle(options = {}) {
     typeof getWildLevelOffsetForMap === "function" ? getWildLevelOffsetForMap(state.currentMap) : 0
   const enemyLevel = Math.max(1, rawEnemyLevel + mapLevelOffset - assistDelta)
   const enemy = createMonster(encounter.speciesId, enemyLevel)
+  if (String(options.captureTag || "") === "golden_chosen_cub") {
+    enemy.attack = 1
+  }
   enemy.isLegendary = Boolean(options.legendary || speciesData[enemy.speciesId]?.isLegendary)
   enemy.isApex = Boolean(options.apex || speciesData[enemy.speciesId]?.isApex)
 
@@ -4945,6 +4995,14 @@ function startWildBattle(options = {}) {
     captureTutorialStage,
     captureTutorialHpFloor: Math.max(1, Number(options.captureTutorialHpFloor) || 1),
     captureTutorialTargetHpRate: Math.max(0.05, Math.min(0.6, Number(options.captureTutorialTargetHpRate) || 0.2)),
+    captureTutorialEnemyDamageMultiplier: Math.max(
+      0.05,
+      Number(options.captureTutorialEnemyDamageMultiplier) || 0.55
+    ),
+    captureTutorialPlayerDamageMultiplier: Math.max(
+      0.2,
+      Number(options.captureTutorialPlayerDamageMultiplier) || 1.0
+    ),
     captureAttempts: 0,
     disableRun: Boolean(options.disableRun),
     mainlineFailSafe: Boolean(options.mainlineFailSafe),

@@ -7,10 +7,19 @@
   }
 
   if (state.storyStage === 1) {
+    if (state.flags.goldenLegendCubCaptured && !state.flags.ideologyConflictResolved) {
+      if (!state.flags.ideologyConflictStarted) {
+        return "前往花冠大道寻找同盟教众辰铃，接取主线《理念之争》。"
+      }
+      return "推进《理念之争》：先完成流派对应的特殊进化，再击败追猎者赫恩。"
+    }
     return `前往花冠大道，捕捉 2 只野生怪兽。当前进度 ${state.progress.wildCaptures} / 2。`
   }
 
   if (state.storyStage === 2) {
+    if (!state.flags.ideologyConflictResolved) {
+      return "主线优先：完成《理念之争》（辰铃求援）后，反派封锁战才会继续开放。"
+    }
     if (!state.flags.alchemyPracticeDone) {
       return "前往家园完成 1 次吞噬或融合实操，再挑战蚀星先遣洛克。"
     }

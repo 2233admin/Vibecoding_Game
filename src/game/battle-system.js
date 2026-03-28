@@ -14,8 +14,13 @@
   }
 
   if (action.type === "capture" && state.player.balls <= 0) {
-    addBattleLog("你的捕捉球已经用完了。")
-    return
+    if (state.battle?.captureTutorial && state.battle?.captureTag === "golden_chosen_cub") {
+      state.player.balls = 1
+      addBattleLog("教学保底：系统补发了 1 枚精灵球。")
+    } else {
+      addBattleLog("你的捕捉球已经用完了。")
+      return
+    }
   }
 
   if (action.type === "run" && state.battle.kind !== "wild") {
@@ -223,6 +228,10 @@ async function resolveCaptureTurn() {
       addBattleLog("缔约共鸣生效：这次捕捉必定成功。")
       await sleep(300)
     }
+  } else if (state.battle.captureTag === "golden_chosen_cub") {
+    catchSuccess = true
+    addBattleLog("神兽幼体契约已锁定：本次捕捉必定成功。")
+    await sleep(240)
   } else if (captureTutorial) {
     const ratioMissing = 1 - enemy.currentHp / enemy.maxHp
     const attempts = Number(state.battle.captureAttempts) || 1
@@ -564,10 +573,28 @@ function performAttack(attacker, defender, skillId) {
     }
   }
 
+  if (state.battle?.captureTutorial) {
+    const activeMonster = getActiveMonster()
+    const isPlayerAttacker = Boolean(activeMonster && attacker?.uid === activeMonster.uid)
+    const playerDamageMultiplier = Math.max(0.2, Number(state.battle.captureTutorialPlayerDamageMultiplier) || 1.0)
+    const enemyDamageMultiplier = Math.max(0.05, Number(state.battle.captureTutorialEnemyDamageMultiplier) || 0.55)
+    damage = clamp(
+      Math.floor(damage * (isPlayerAttacker ? playerDamageMultiplier : enemyDamageMultiplier)),
+      1,
+      999
+    )
+  }
+
   defender.currentHp = clamp(defender.currentHp - damage, 0, defender.maxHp)
   if (shouldApplyCaptureTutorialHpFloor(defender)) {
     const hpFloor = Math.max(1, Number(state.battle?.captureTutorialHpFloor) || 1)
     defender.currentHp = Math.max(defender.currentHp, hpFloor)
+  }
+  if (state.battle?.kind === "wild" && state.battle?.captureTag === "golden_chosen_cub") {
+    const activeMonster = getActiveMonster()
+    if (activeMonster && defender?.uid === activeMonster.uid) {
+      defender.currentHp = Math.max(defender.currentHp, 1)
+    }
   }
   const playerSideMonster = getActiveMonster()
   const isPlayerAttack = Boolean(playerSideMonster && attacker?.uid === playerSideMonster.uid)

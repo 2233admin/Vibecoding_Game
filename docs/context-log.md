@@ -1,5 +1,29 @@
 ﻿# Context Log
 
+## 2026-03-29 Iteration BK（特性扩充：B×15 / A×10 / S×5 全量配置）
+
+### 任务目标
+- 将特性池从 6 条扩充至 30 条（B×15 / A×10 / S×5），覆盖元素、属性、状态、冒险、经济各维度。
+
+### 本轮完成
+1. **更新 `config/trait-balance.json`** → v2：
+   - B 新增 13 条：水/草/电/岩系伤害增幅、轻足/厚积/坚守/铁鳞、背水/先手/战愈、拾荒/嗅金
+   - A 新增 8 条：慑服/以弱胜强/感知/连战亢奋/守护本能（战斗）+ 猎手/学识/幽步（冒险）
+   - S 新增 3 条：顶点法则（野战攻击+防逃）、传说光环（全队攻速×1.12）、涅槃（复活+免疫）
+2. **重写 `docs/trait-balance-table-v1.md`** → v2：完整 30 条总表，含 S 级风险备注
+
+### 关键设计决策
+- 5 条元素增幅同属 `type_boost` 叠加组，只取最高，不叠爆
+- `fervor_b`（线性低血）与 `last_gasp_b`（阈值固定）同组，不双重触发
+- `apex_dominance_s` 攻击+40%+防逃，主程侧接入时建议单独评估防逃是否保留
+- `legend_aura_s` 全队加成为独立光环乘区，实现时需区分 base_trait vs aura_trait 两层计算
+
+### 关键文件
+- `E:/Ai/Vibecoding_Game/config/trait-balance.json`（v2，30 条）
+- `E:/Ai/Vibecoding_Game/docs/trait-balance-table-v1.md`（v2，全量总表）
+
+---
+
 ## 2026-03-28 Iteration BJ（特性系统配置落地：trait-balance.json + 总表 + 平衡模拟）
 
 ### 任务目标
@@ -1990,6 +2014,102 @@
 - `src/game/world-events.js`
 - `src/game/globals.js`
 - `src/game/bootstrap-ai.js`
+- `docs/context-log.md`
+
+## 2026-03-28（主线《理念之争》v1 落地）
+
+### 目标
+- 将《理念之争》做成可直接游玩的主线段落：接取求援 -> 流派觉醒 -> 对立战斗 -> 道馆引导。
+- 保证神兽幼体相关流程不因队伍状态或摆位问题中断。
+
+### 已完成
+1. 主线入口与NPC：
+   - 新增 `同盟教众 辰铃`（route 地图）作为《理念之争》入口 NPC。
+   - 新增 `ideology_hunter` 训练师战，作为该主线收口战斗。
+2. 流程门槛与引导：
+   - 捕获神兽幼体后推送“理念冲突求援”提示。
+   - 在 `storyStage 1/2` 的目标栏与教授对白中，加入《理念之争》优先引导。
+   - 未完成《理念之争》时，洛克封锁战会阻挡推进（防止主线断层）。
+3. 流派觉醒实操：
+   - 融合流：发放白翼素材体并跳转融合台预填目标。
+   - 吞噬流：发放残破圣剑资源并跳转吞噬台预填目标/元素。
+   - 自动确保神兽幼体在队伍中并设为出战位，避免“目标不在队伍”导致卡流程。
+4. 主线奖励与规则：
+   - 为神兽幼体发放流派加护（融合偏速度、吞噬偏耐久）。
+   - 发放技能 `仁慈`（仅野生战留 1 HP 机制已在战斗层生效）。
+   - 理念之争胜利后明确口播“下一次神兽机遇在道馆试炼”。
+
+### 验证
+- `node --check`：
+  - `src/game/world-events.js`
+  - `src/game/ui-panels.js`
+  - `src/game/battle-system.js`
+  - `src/game/globals.js`
+- `node scripts/acceptance-interaction.mjs`：
+  - `passed=6 failed=0`
+
+### 关键文件
+- `src/game/world-events.js`
+- `src/game/ui-panels.js`
+- `src/game/battle-system.js`
+- `src/game/globals.js`
+- `docs/context-log.md`
+
+## 2026-03-28（镜前立绘选择 UI 修复：溢出修正 + 二选一流程）
+
+### 问题
+- 镜前立绘选择面板内容过长，超出游戏可视区，出现“UI 跑到游戏外”体验问题。
+- 立绘选择入口过多，玩家理解成本高。
+
+### 修复
+1. Overlay 可滚动修复：
+   - `choice-overlay` 改为可纵向滚动，内容从顶部布局；
+   - `choice-card` 增加最大高度与内部滚动，避免卡片溢出舞台。
+2. 镜前流程改为两步：
+   - 第一步只登记身份（名字随机/自定义 + 性别）；
+   - 第二步只保留两种立绘方案：`系统默认` / `自定义生成`。
+3. 系统默认方案增强：
+   - 进入预设库后可查看立绘预览图；
+   - 增加每套立绘说明文本，便于快速决策。
+
+### 验证
+- `node --check`：
+  - `src/game/world-events.js`
+  - `src/game/ui-panels.js`
+  - `src/game/battle-system.js`
+- `node scripts/acceptance-interaction.mjs`：
+  - `passed=6 failed=0`
+
+### 关键文件
+- `styles.css`
+- `src/game/world-events.js`
+- `docs/context-log.md`
+
+## 2026-03-28（神兽幼体缔约战再保底：防止被打崩导致捕捉失败）
+
+### 问题
+- 玩家反馈神兽幼体缔约战仍可能因战斗压力过高导致体验崩坏，出现“被吊打后无法顺畅完成捕捉”。
+
+### 修复
+1. 缔约战前补给强化：
+   - 进入神兽幼体教学战前，捕捉球不足时自动补到 5 枚。
+2. 捕捉结果强锁定：
+   - 神兽幼体教学战进入捕捉阶段后，捕捉判定改为必定成功。
+   - 若战中捕捉球耗尽，会自动补发 1 枚继续流程。
+3. 战斗强度下调：
+   - 神兽幼体等级下调到 5。
+   - 教学战新增独立伤害倍率（玩家伤害上调，敌方伤害下调）。
+
+### 验证
+- `node --check`：
+  - `src/game/battle-system.js`
+  - `src/game/world-events.js`
+- `node scripts/acceptance-interaction.mjs`：
+  - `passed=6 failed=0`
+
+### 关键文件
+- `src/game/world-events.js`
+- `src/game/battle-system.js`
 - `docs/context-log.md`
 
 ## 2026-03-28（数值 agent 范围切分：仅特性系统）
