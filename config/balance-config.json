@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "encounter": {
+    "wildLevelOffsetGlobal": 0,
+    "wildLevelOffsetByMap": {
+      "route": 0,
+      "meadow": -2,
+      "lake": 0
+    },
+    "trainerLevelOffsetGlobal": 0,
+    "trainerLevelOffsetByTrainer": {
+      "tutorial_aide": 0,
+      "scout": 0,
+      "vanguard": 0,
+      "leader": 0
+    }
+  },
+  "economy": {
+    "shopPriceMultiplier": 1,
+    "sellPriceMultiplier": 1,
+    "battleCoinMultiplier": 1.2
+  },
+  "qa": {
+    "enabled": false,
+    "quickKeysEnabled": true,
+    "starterKitOnNewGame": true,
+    "showHomeFacilitiesFromStart": false,
+    "battleAnimationMultiplier": 0.72
+  }
+}

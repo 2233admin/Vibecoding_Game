@@ -1,0 +1,512 @@
+{
+  "generatedAt": "2026-03-26T08:37:17.410Z",
+  "sourceProject": "E:\\Ai\\GBIT_GAME",
+  "targetProject": "E:\\Ai\\Vibecoding_Game",
+  "profile": "web-full",
+  "files": [
+    {
+      "path": "index.html",
+      "size": 16837,
+      "sha256": "15f64b68ce92e2c2c57059a4eed292811bd009c28a59dca8bb459fa636139155",
+      "source": "index.html"
+    },
+    {
+      "path": "styles.css",
+      "size": 31682,
+      "sha256": "ced4e77ae97b49f4dad2dd59f5a412e9f5e27411796ad80574516c0d250460a8",
+      "source": "styles.css"
+    },
+    {
+      "path": "game.js",
+      "size": 152,
+      "sha256": "19f696d3aa5da4fbb3dc8bd0c621fad99c3764ce5bdba1606db58a061b0aae5e",
+      "source": "game.js"
+    },
+    {
+      "path": "assets.js",
+      "size": 2057,
+      "sha256": "e46917ad9afa2c301150fca051789fc5675fe88bd8a3e915044a5ab1c9e52e5a",
+      "source": "assets.js"
+    },
+    {
+      "path": "assets.generated.js",
+      "size": 2320,
+      "sha256": "8f7073f425ac4b40d0861672328fd3a820df5dfcbda4536b157c46d08cb9e433",
+      "source": "assets.generated.js"
+    },
+    {
+      "path": "package.json",
+      "size": 2508,
+      "sha256": "f60a06aede927ad2f7044c4f756e587d2a10df22c3a305ee6d238fcd1c54a664",
+      "source": "package.json"
+    },
+    {
+      "path": "package-lock.json",
+      "size": 34963,
+      "sha256": "454cd2777b2a264b347c5eb786c79607c48f50a7cbb620fb44d4f5c47baa1046",
+      "source": "package-lock.json"
+    },
+    {
+      "path": ".gitignore",
+      "size": 120,
+      "sha256": "d772217cfd047fad52f76baa7eb4b4db6448f76067fea18ef60b4ce5fa1922dc",
+      "source": ".gitignore"
+    },
+    {
+      "path": ".env.example",
+      "size": 523,
+      "sha256": "ba42420eb69bd7e3c09632af2ae4e4cdf301405d95444c1e73d1e92a4de00259",
+      "source": ".env.example"
+    },
+    {
+      "path": "README.md",
+      "size": 6993,
+      "sha256": "7100d6e574a0d2ac4e9e349c175cbc2a3e38bb0c8e35686870ed8619449fdc86",
+      "source": "README.md"
+    },
+    {
+      "path": "src/fusion-lab/image-service.js",
+      "size": 2309,
+      "sha256": "3f72781e0208877c881768145336d88131adde68db947e4e4de3669206ee6bd8",
+      "source": "src/fusion-lab/image-service.js"
+    },
+    {
+      "path": "src/fusion-lab/main.js",
+      "size": 4090,
+      "sha256": "69f149ad23e7c176ee53d1ca5de693af58d08f7bd5e54cf83657cb1e886fb5d1",
+      "source": "src/fusion-lab/main.js"
+    },
+    {
+      "path": "src/fusion-lab/rules-engine.js",
+      "size": 6557,
+      "sha256": "2b24b8d05a72bd6a3db5e39e1f3ae2a6e14c5a7b51d390bfd806cbc0655c3e56",
+      "source": "src/fusion-lab/rules-engine.js"
+    },
+    {
+      "path": "src/fusion-lab/state.js",
+      "size": 1257,
+      "sha256": "d089016bdb9d4d3d5ec8c8e286839fad8ab78b240273600eb8cbfac389b41b1a",
+      "source": "src/fusion-lab/state.js"
+    },
+    {
+      "path": "src/fusion-lab/ui.js",
+      "size": 4854,
+      "sha256": "3484ef1b3cb629c0dbedcb2ad85789ac74dff3c3a15961499776fea630a55ef2",
+      "source": "src/fusion-lab/ui.js"
+    },
+    {
+      "path": "src/game/battle-system.js",
+      "size": 32550,
+      "sha256": "f539436beb1fc0d4542c89a1b4d88a5ade2f03815a78991f1a4ad86410a2099a",
+      "source": "src/game/battle-system.js"
+    },
+    {
+      "path": "src/game/bootstrap-ai.js",
+      "size": 55267,
+      "sha256": "84c686a09b29b256166df083bc11f644d2e211123d6b3e59b2d842067dfffca0",
+      "source": "src/game/bootstrap-ai.js"
+    },
+    {
+      "path": "src/game/evolution-pipeline.js",
+      "size": 14027,
+      "sha256": "2eacb04233b259e12bd3863a3a99a1d201e936b031382ffdbed4366b859da4e2",
+      "source": "src/game/evolution-pipeline.js"
+    },
+    {
+      "path": "src/game/globals.js",
+      "size": 72976,
+      "sha256": "3111b9e7790935fc679e5da66bafba04f901ae1ace459a7438b5f1f25f2cb1a7",
+      "source": "src/game/globals.js"
+    },
+    {
+      "path": "src/game/rendering.js",
+      "size": 53982,
+      "sha256": "15de69e4f57f9dc1e8b789cc088cfeeaf02b2b22ba2a00327af5bc20bf268aef",
+      "source": "src/game/rendering.js"
+    },
+    {
+      "path": "src/game/ui-panels.js",
+      "size": 46309,
+      "sha256": "027f654d2db48fcdb6e19cd6a0021946aac1ca3d0ca93619f80dc77fffbcc8ff",
+      "source": "src/game/ui-panels.js"
+    },
+    {
+      "path": "src/game/world-events.js",
+      "size": 49042,
+      "sha256": "7ea591c519f81a75e693ed59920791961308edf6ba5c5182f2b09f70067b62fa",
+      "source": "src/game/world-events.js"
+    },
+    {
+      "path": "assets/characters/caretaker.jpg",
+      "size": 253783,
+      "sha256": "9410ee6f0ed923d978745185fc3d55498e6c738e24f0c174898d212882a5981e",
+      "source": "assets/characters/caretaker.jpg"
+    },
+    {
+      "path": "assets/characters/leader.jpg",
+      "size": 945194,
+      "sha256": "fdf9868e434efebe2b98273de15e66171398954f41bfe91ec99f40fa14642810",
+      "source": "assets/characters/leader.jpg"
+    },
+    {
+      "path": "assets/characters/merchant.jpg",
+      "size": 271591,
+      "sha256": "7758858a4ec2ef926c622b95191b3849f8908a7ba82ce9648296fbea67a25bb4",
+      "source": "assets/characters/merchant.jpg"
+    },
+    {
+      "path": "assets/characters/player.jpg",
+      "size": 267471,
+      "sha256": "044ef6c384bdca891c93c3e3760624d6ac824878eac61e83011e37bcf0324dc6",
+      "source": "assets/characters/player.jpg"
+    },
+    {
+      "path": "assets/characters/professor.jpg",
+      "size": 486304,
+      "sha256": "ec3101e63896fe8d169427026fe557730791324c6b2090fb9bd8f7b54cf0e874",
+      "source": "assets/characters/professor.jpg"
+    },
+    {
+      "path": "assets/characters/quartermaster.jpg",
+      "size": 285043,
+      "sha256": "8e7a6ea8da6f90a7a6cd8f6c6f3e07420dccbac3c794f8ea2472b513db1e1ecf",
+      "source": "assets/characters/quartermaster.jpg"
+    },
+    {
+      "path": "assets/characters/scout.png",
+      "size": 940318,
+      "sha256": "d8a22c4894e6204696d5815940c723c6cd7df1e976151378d6fc9690c1fbc8e0",
+      "source": "assets/characters/scout.png"
+    },
+    {
+      "path": "assets/monsters/aurorafang.png",
+      "size": 1738422,
+      "sha256": "4eb5ad0df4771d8f32a43275aff7e921a74c690c4c2af96d7b2fc6029f85842a",
+      "source": "assets/monsters/aurorafang.png"
+    },
+    {
+      "path": "assets/monsters/blazedrake.png",
+      "size": 1695714,
+      "sha256": "b07ee807d89ab54437e496d85b5dc0d12dbab50030c9ed4d98c89d1e4033350c",
+      "source": "assets/monsters/blazedrake.png"
+    },
+    {
+      "path": "assets/monsters/cinderpup.png",
+      "size": 1143555,
+      "sha256": "98637b410515df590be15366d9568e563c6c128175844398e2f5cddb59bfd10e",
+      "source": "assets/monsters/cinderpup.png"
+    },
+    {
+      "path": "assets/monsters/dex_abyssalor_v1.png",
+      "size": 1425661,
+      "sha256": "d5dd167fec5d5d60f65f78e8f64ad08d0bd119d6959692bb0846fe59411910a0",
+      "source": "assets/monsters/dex_abyssalor_v1.png"
+    },
+    {
+      "path": "assets/monsters/dex_abyssalor_v2.png",
+      "size": 1463575,
+      "sha256": "f77c43abd25835e3b188f8b363d5baeb8610229474f352ae821c85f34cdf3715",
+      "source": "assets/monsters/dex_abyssalor_v2.png"
+    },
+    {
+      "path": "assets/monsters/dex_reedimp_v1.png",
+      "size": 1184752,
+      "sha256": "5737b92fa6924b93dce7f22490c4c566d786f1ceea9a16af28da89ba9754d7e2",
+      "source": "assets/monsters/dex_reedimp_v1.png"
+    },
+    {
+      "path": "assets/monsters/dex_reedimp_v2.png",
+      "size": 1064737,
+      "sha256": "b98d41999caad657d498dad58b0dcafe56713eea6d643d50af36e34d4dbe6e49",
+      "source": "assets/monsters/dex_reedimp_v2.png"
+    },
+    {
+      "path": "assets/monsters/dex_voltkit_v1.jpg",
+      "size": 2482657,
+      "sha256": "b062cd621bd661f8c3ee117db7c2e7283cf8d9f3d32d55fd007174372e9a0db7",
+      "source": "assets/monsters/dex_voltkit_v1.jpg"
+    },
+    {
+      "path": "assets/monsters/dex_voltkit_v2.jpg",
+      "size": 2155874,
+      "sha256": "798946f9d16b1744eb81dc4e517ae4aa4b97a8f17519f404534581a22073f885",
+      "source": "assets/monsters/dex_voltkit_v2.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_bug_elemental.jpg",
+      "size": 2419776,
+      "sha256": "38a9583296747a0db78fa9950b0790a37a2fae52f4e57e7501721a6b8d63e425",
+      "source": "assets/monsters/preset_blazehound_bug_elemental.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_electric_elemental.jpg",
+      "size": 2514231,
+      "sha256": "ea8c5de9234b38e21e8997bd48d18cc9c4e00dba205474963a4fe0f097dcb754",
+      "source": "assets/monsters/preset_blazehound_electric_elemental.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_fairy_elemental.jpg",
+      "size": 2316716,
+      "sha256": "5423045a65853c16f1ae0245f0753a9c058eb0520e858a65613dfbfed670aa3b",
+      "source": "assets/monsters/preset_blazehound_fairy_elemental.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_fire_elemental.jpg",
+      "size": 2384732,
+      "sha256": "4559d0ccc91522b4340d5766b601fdd2e8b043a01a53eda76c02a62d03379a17",
+      "source": "assets/monsters/preset_blazehound_fire_elemental.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_grass_elemental.jpg",
+      "size": 2256863,
+      "sha256": "b1c8c09027ad5076c78790f4e8da770d79dcaa68d93870ed87ffd0a20f09d8e8",
+      "source": "assets/monsters/preset_blazehound_grass_elemental.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_rock_elemental.jpg",
+      "size": 2093852,
+      "sha256": "f05295631f070031aadd1b07b07f4f72c92396df37662857bb4a3b3ed9db7796",
+      "source": "assets/monsters/preset_blazehound_rock_elemental.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_sun_shiny.jpg",
+      "size": 2041657,
+      "sha256": "3d2f50e6a34b46b6340a063fcd7c8a21ba5638b3e751a9bd323a3e75f2a7e490",
+      "source": "assets/monsters/preset_blazehound_sun_shiny.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_water_elemental.jpg",
+      "size": 2263570,
+      "sha256": "7a18b6d2ddc69f56bbede9bfdbcfb1d556510fc2d8a4c1b977a84ee5b031ebd0",
+      "source": "assets/monsters/preset_blazehound_water_elemental.jpg"
+    },
+    {
+      "path": "assets/monsters/preset_blazehound_weapon_warrior.jpg",
+      "size": 2311648,
+      "sha256": "04539f2333d1eaa6b6449954a1a99f8c2f587fe6643585f78771aa2f012fdf18",
+      "source": "assets/monsters/preset_blazehound_weapon_warrior.jpg"
+    },
+    {
+      "path": "assets/monsters/snowkit.png",
+      "size": 1510433,
+      "sha256": "13a1feb7c5fd0335fe2754e985182cf85e997e1991cff994a6c19a100a2276cc",
+      "source": "assets/monsters/snowkit.png"
+    },
+    {
+      "path": "assets/monsters/sprigoon.jpg",
+      "size": 76135,
+      "sha256": "e6105073885423ca1c157346014a0626727e41139894f6d7277d14e353c6b4f2",
+      "source": "assets/monsters/sprigoon.jpg"
+    },
+    {
+      "path": "assets/monsters/sprigoon_electric_fusion.png",
+      "size": 1093405,
+      "sha256": "f8fe05d208c05c3288eac94b172181e3a56b61f271f1fafdff0356068cecb367",
+      "source": "assets/monsters/sprigoon_electric_fusion.png"
+    },
+    {
+      "path": "assets/monsters/sprigoon_fire_fusion.png",
+      "size": 1252679,
+      "sha256": "9ec718185b69a978a7309fd43a8cb437cc50b0b8c77d54134945d5c88b285e17",
+      "source": "assets/monsters/sprigoon_fire_fusion.png"
+    },
+    {
+      "path": "assets/monsters/sprigoon_water_fusion.png",
+      "size": 1079139,
+      "sha256": "69ed61452797603741ac681ad1fa416a8629a3c02b419aab02d7b6eb3d8df16e",
+      "source": "assets/monsters/sprigoon_water_fusion.png"
+    },
+    {
+      "path": "assets/monsters/sprigoon_weapon_fusion.png",
+      "size": 1137924,
+      "sha256": "cb5a7d675a5534ae42a7efb86180dfcce8f3b84d748b7836b3dfc4d26ddd15c8",
+      "source": "assets/monsters/sprigoon_weapon_fusion.png"
+    },
+    {
+      "path": "assets/monsters/sproutle_fire_fire_fusion.jpg",
+      "size": 574847,
+      "sha256": "06b38e1347d61147c26c46ed678ce0bb9d51d43f23974cc0ccf557a3f44026d7",
+      "source": "assets/monsters/sproutle_fire_fire_fusion.jpg"
+    },
+    {
+      "path": "assets/monsters/sunfang.png",
+      "size": 1312461,
+      "sha256": "683f322762d1b1bea6fb9607084fd28d547a2dbd80bed28adb4d813cb46d254b",
+      "source": "assets/monsters/sunfang.png"
+    },
+    {
+      "path": "assets/monsters/warmaul.png",
+      "size": 1422348,
+      "sha256": "13d7fa39829173674b62750bd98e10889dbda1a1987582f6efee2d1a9577f266",
+      "source": "assets/monsters/warmaul.png"
+    },
+    {
+      "path": "scripts/acceptance-interaction.mjs",
+      "size": 9589,
+      "sha256": "abbdaa9f68cd1880c3e8838692286ef22194ac6aeb544ea296b1549ef2360d35",
+      "source": "scripts/acceptance-interaction.mjs"
+    },
+    {
+      "path": "scripts/bootstrap-competition-project.mjs",
+      "size": 12309,
+      "sha256": "a0416212599cdaf73b162e9dd43e61af47171474144138f2cfe8abf103d7eae5",
+      "source": "scripts/bootstrap-competition-project.mjs"
+    },
+    {
+      "path": "scripts/comfy-presets.mjs",
+      "size": 5933,
+      "sha256": "c3598d2a38e818cf1f8552d894a284ff553365c1504ce681cc95e0b59a16e9f2",
+      "source": "scripts/comfy-presets.mjs"
+    },
+    {
+      "path": "scripts/dev-server.mjs",
+      "size": 28396,
+      "sha256": "e619eec4c3f91beb7b786fb8c5082a0afdb126a1038ac5eedf6fa8d63d122be0",
+      "source": "scripts/dev-server.mjs"
+    },
+    {
+      "path": "scripts/generate-comfy-asset.mjs",
+      "size": 14570,
+      "sha256": "9423cc56c72b41144e8b6af921f990bdb514a6efa69bdb3144cacfd52f87b992",
+      "source": "scripts/generate-comfy-asset.mjs"
+    },
+    {
+      "path": "scripts/generate-generic-npc-placeholders.mjs",
+      "size": 4197,
+      "sha256": "ac9690546fc71b81daef5283bfbe629e69b085473875a16a4e3668bec44cd6fb",
+      "source": "scripts/generate-generic-npc-placeholders.mjs"
+    },
+    {
+      "path": "scripts/generate-pixel-character-assets.mjs",
+      "size": 9388,
+      "sha256": "404e1cdf112bd0844a023010029b33b650647760a1d5e15c1871758e4aa168b9",
+      "source": "scripts/generate-pixel-character-assets.mjs"
+    },
+    {
+      "path": "scripts/generate-proxy-character-assets.mjs",
+      "size": 34130,
+      "sha256": "43406ca93a7b2f446b7ad07b0abbecff1a93009c8e1057ad0c8066c11f588e47",
+      "source": "scripts/generate-proxy-character-assets.mjs"
+    },
+    {
+      "path": "scripts/generate-proxy-generic-npcs.mjs",
+      "size": 757,
+      "sha256": "0f8309212c354caa80413e8f72324dc30796bc7d5f74b7d6b1b0ff8d9757a5d8",
+      "source": "scripts/generate-proxy-generic-npcs.mjs"
+    },
+    {
+      "path": "scripts/generate-runtime-asset.mjs",
+      "size": 20435,
+      "sha256": "33634ec13ffb9d5742aa1861fe908612e122d28c359bb2cf290fb79ac95fac86",
+      "source": "scripts/generate-runtime-asset.mjs"
+    },
+    {
+      "path": "scripts/load-local-env.mjs",
+      "size": 1942,
+      "sha256": "5c78be745bd1e10a13319b9713417d427e6ca8875946f075365cf90462409429",
+      "source": "scripts/load-local-env.mjs"
+    },
+    {
+      "path": "scripts/publish-character-assets.mjs",
+      "size": 3631,
+      "sha256": "af3aa49ddea2d3cbcb13285b9a8e4cb7a9c1394ad7d3be1013408ed47af74b26",
+      "source": "scripts/publish-character-assets.mjs"
+    },
+    {
+      "path": "scripts/publish-generated-assets.mjs",
+      "size": 5421,
+      "sha256": "b79ae6a90ce19ded189160dfff44fb5634dcd349998b8d9bdff669ffb4e3e350",
+      "source": "scripts/publish-generated-assets.mjs"
+    },
+    {
+      "path": "scripts/test-fusion-pipeline.mjs",
+      "size": 5640,
+      "sha256": "cd30e7e04e29c493527781f50a95d66541366a8749a0736ba41036d565dac2f7",
+      "source": "scripts/test-fusion-pipeline.mjs"
+    },
+    {
+      "path": "rules/evolution-blend-skill.md",
+      "size": 1132,
+      "sha256": "11df3050a4fb02909d79172641c7c73412dd92e01d99a70727c80dd1337362d2",
+      "source": "rules/evolution-blend-skill.md"
+    },
+    {
+      "path": "rules/knowledge-base-rules.md",
+      "size": 2153,
+      "sha256": "e1cac0af44072aedd3c2c74d50705bbab7d73a50afc3ee730533e2f149aec58a",
+      "source": "rules/knowledge-base-rules.md"
+    },
+    {
+      "path": "rules/project-rules.md",
+      "size": 5328,
+      "sha256": "99db2ac707874c18355abb4d609dcb087a74c3d0bc3cf4799e1a5296479736b9",
+      "source": "rules/project-rules.md"
+    },
+    {
+      "path": "docs/context-log.md",
+      "size": 29694,
+      "sha256": "cb33cfd24a11258c9d5a5bae2bed9ca28573211f28a4f5ff35d9dbf6b7eac2fc",
+      "source": "docs/context-log.md"
+    },
+    {
+      "path": "docs/debugging-guide.md",
+      "size": 11534,
+      "sha256": "ec4decc69e8e4218765c823ce9d0296d2031c55e53e72437533bfa04c5f653df",
+      "source": "docs/debugging-guide.md"
+    },
+    {
+      "path": "docs/game-architecture.md",
+      "size": 15892,
+      "sha256": "e9e1734ed7777196e2e64d50bb5a70ca1693e24a41fe51cd6986f5b84fc480d4",
+      "source": "docs/game-architecture.md"
+    },
+    {
+      "path": "docs/system-data-flow.md",
+      "size": 10174,
+      "sha256": "9ba26d930cfe9accb6893e011bfaccdd2c8cd7307c6fef8880a863f43f83dbc0",
+      "source": "docs/system-data-flow.md"
+    },
+    {
+      "path": "docs/workflow.md",
+      "size": 2241,
+      "sha256": "724f68e0a00a5ecf12286f3cfadf782005561f9c9e90708c7ece1059436927bf",
+      "source": "docs/workflow.md"
+    },
+    {
+      "path": "docs/world-lore.md",
+      "size": 5171,
+      "sha256": "d64a9bab7e9080fb77a413d17c149327c6e89174fef5d04c6d42e65b64473fff",
+      "source": "docs/world-lore.md"
+    },
+    {
+      "path": "tasks/board.md",
+      "size": 2599,
+      "sha256": "e54d4e81ca8efdbcca1e72e04a23fe347c7901dfae8c715384eab7ebb76253bd",
+      "source": "tasks/board.md"
+    },
+    {
+      "path": "tasks/competition-import-quickstart.md",
+      "size": 1686,
+      "sha256": "b722435b22b660430942e4b488a7118bbe6b347690194b2c2685f50693a02b26",
+      "source": "tasks/competition-import-quickstart.md"
+    },
+    {
+      "path": "tasks/demo-week-plan.md",
+      "size": 4492,
+      "sha256": "00a46f4c60a673aa166004ec0a8f3c3947a164ef07ab2cc953fb3d4a6b6c6560",
+      "source": "tasks/demo-week-plan.md"
+    },
+    {
+      "path": "tasks/fusion-devour-web-plan.md",
+      "size": 5631,
+      "sha256": "bf71c28e74fdd0cf85cbfcf0adb1d581217c57f29b0d0b9b01235a2012aad4c3",
+      "source": "tasks/fusion-devour-web-plan.md"
+    },
+    {
+      "path": "tasks/inheritance-priority-matrix.md",
+      "size": 7285,
+      "sha256": "7cd98d5542dc52d5a5a7615eb3212ca4900bd75442cbee501b896786adef3ffb",
+      "source": "tasks/inheritance-priority-matrix.md"
+    }
+  ]
+}

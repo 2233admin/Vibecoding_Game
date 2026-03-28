@@ -1,0 +1,516 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GBIT Monster Quest</title>
+  <link rel="stylesheet" href="styles.css?v=20260328l" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <div class="hero-copy-block">
+          <div class="hero-pills">
+            <span class="hero-pill">XY Mood</span>
+            <span class="hero-pill">Gemini Portraits</span>
+            <span class="hero-pill">Story Focus UI</span>
+          </div>
+          <p class="eyebrow">LOCAL MONSTER RPG</p>
+          <h1>GBIT Monster Quest</h1>
+          <p class="hero-copy">
+            这一版将项目继续向类宝可梦 XY 的体验推进：更清晰的大地图探索、更完整的对战循环、以及可直接接入 Gemini 的角色与进化立绘生成管线。
+          </p>
+        </div>
+
+        <div class="hero-badge-stack">
+          <div class="hero-orbit">
+            <span class="orbit-kicker">World Expansion</span>
+            <strong>地图与玩法持续扩展中</strong>
+            <p>继续扩展地图、NPC、精灵与系统，保持“可长期演进”的项目结构。</p>
+          </div>
+
+          <div class="hero-metrics">
+            <div class="metric-card">
+              <span>徽章</span>
+              <strong id="badgeCount">0</strong>
+            </div>
+            <div class="metric-card">
+              <span>捕获数</span>
+              <strong id="caughtCount">0 / 0</strong>
+            </div>
+            <div class="metric-card">
+              <span>精灵球</span>
+              <strong id="ballCount">0</strong>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="stage card">
+          <div class="stage-topbar">
+            <span id="mapName" class="stage-chip">星辉城</span>
+            <span id="stepCount" class="stage-stat">步数 0</span>
+            <span id="partySummary" class="stage-stat">队伍 0 / 6</span>
+            <span class="stage-stat stage-guide">移动 ↑↓←→/WASD · 交互 空格/E · 回城 H</span>
+          </div>
+
+          <div class="canvas-frame">
+            <canvas id="gameCanvas" width="896" height="672"></canvas>
+            <div id="inGameHud" class="in-game-hud">
+              <button type="button" class="in-game-hud-button" data-panel="bagPanelCard" title="背包 (B)">🎒 背包</button>
+              <button type="button" class="in-game-hud-button" data-panel="teamPanelCard" title="队伍 (T)">👥 队伍</button>
+              <button type="button" class="in-game-hud-button" data-panel="homePanelCard" title="仓库 (Y)">🏡 仓库</button>
+              <button type="button" class="in-game-hud-button" data-panel="alchemyPanelCard" title="进化工坊 (R)">🜂 进化</button>
+            </div>
+
+            <div id="inGameMenuOverlay" class="in-game-menu-overlay hidden" aria-hidden="true">
+              <div class="in-game-menu-shell">
+                <div class="in-game-menu-layout">
+                  <aside id="inGameMenuPrimaryTabs" class="in-game-menu-primary-tabs">
+                    <button
+                      type="button"
+                      class="in-game-menu-primary-tab"
+                      data-panel="bagPanelCard"
+                      data-primary-key="bag"
+                      data-title="背包"
+                    >
+                      <span class="in-game-menu-primary-kicker">B</span>
+                      <strong>背包</strong>
+                    </button>
+                    <button
+                      type="button"
+                      class="in-game-menu-primary-tab"
+                      data-panel="teamPanelCard"
+                      data-primary-key="team"
+                      data-title="队伍"
+                    >
+                      <span class="in-game-menu-primary-kicker">T</span>
+                      <strong>队伍</strong>
+                    </button>
+                    <button
+                      type="button"
+                      class="in-game-menu-primary-tab"
+                      data-panel="pokedexPanelCard"
+                      data-primary-key="pokedex"
+                      data-title="图鉴"
+                    >
+                      <span class="in-game-menu-primary-kicker">P</span>
+                      <strong>图鉴</strong>
+                    </button>
+                    <button
+                      type="button"
+                      class="in-game-menu-primary-tab"
+                      data-panel="alchemyPanelCard"
+                      data-primary-key="workshop"
+                      data-title="工坊"
+                    >
+                      <span class="in-game-menu-primary-kicker">R</span>
+                      <strong>工坊</strong>
+                    </button>
+                    <button
+                      type="button"
+                      class="in-game-menu-primary-tab"
+                      data-panel="controlPanelCard"
+                      data-primary-key="settings"
+                      data-title="设置/操作"
+                    >
+                      <span class="in-game-menu-primary-kicker">Esc</span>
+                      <strong>设置</strong>
+                    </button>
+                  </aside>
+
+                  <section class="in-game-menu-content">
+                    <div class="in-game-menu-head">
+                      <div>
+                        <p class="choice-kicker">Adventure Menu</p>
+                        <h2 id="inGameMenuTitle">背包</h2>
+                        <p id="inGameMenuPath" class="in-game-menu-path">背包</p>
+                      </div>
+                      <button id="inGameMenuCloseButton" class="mini-button" type="button">关闭 Esc</button>
+                    </div>
+                    <div id="inGameMenuUtilityTabs" class="in-game-menu-utility-tabs">
+                      <button type="button" class="in-game-menu-utility-tab" data-panel="homePanelCard" data-title="家园仓库">🏡 家园仓库</button>
+                      <button type="button" class="in-game-menu-utility-tab" data-panel="alchemyPanelCard" data-title="进化工坊">🜂 进化工坊</button>
+                      <button type="button" class="in-game-menu-utility-tab" data-panel="playerArtPanel" data-title="立绘工坊">🎨 立绘工坊</button>
+                    </div>
+                    <div id="inGameMenuViewport" class="in-game-menu-viewport"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="battleOverlay" class="battle-overlay hidden">
+              <div class="battle-head">
+                <div>
+                  <p class="battle-kicker">Battle Phase</p>
+                  <h2 id="battleTitle">野外遭遇</h2>
+                </div>
+                <p id="battleHint" class="battle-hint"></p>
+              </div>
+              <div id="evolutionPortraitStatus" class="evolution-portrait-status hidden">
+                <p id="evolutionPortraitStatusText" class="evolution-portrait-status-text">进化立绘准备中…</p>
+                <div class="evolution-portrait-progress">
+                  <div id="evolutionPortraitProgressFill" class="evolution-portrait-progress-fill"></div>
+                </div>
+                <div class="evolution-portrait-actions">
+                  <button id="evolutionPortraitRefresh" class="mini-button" type="button">刷新进化立绘</button>
+                </div>
+              </div>
+
+              <div class="battle-stage">
+                <article class="combatant enemy">
+                  <div class="sprite-badge">
+                    <span id="enemySprite">?</span>
+                  </div>
+                  <div class="combatant-body">
+                    <div class="combatant-line">
+                      <h3 id="enemyName">未知精灵</h3>
+                      <span id="enemyLevel">Lv.1</span>
+                    </div>
+                    <p id="enemyType" class="type-pill">普通系</p>
+                    <div class="hp-track">
+                      <div id="enemyHpFill" class="hp-fill"></div>
+                    </div>
+                    <p id="enemyHpText" class="hp-text">0 / 0 HP</p>
+                  </div>
+                </article>
+
+                <article class="combatant player">
+                  <div class="sprite-badge">
+                    <span id="playerSprite">?</span>
+                  </div>
+                  <div class="combatant-body">
+                    <div class="combatant-line">
+                      <h3 id="playerName">未知伙伴</h3>
+                      <span id="playerLevel">Lv.1</span>
+                    </div>
+                    <p id="playerType" class="type-pill">普通系</p>
+                    <div class="hp-track">
+                      <div id="playerHpFill" class="hp-fill"></div>
+                    </div>
+                    <p id="playerHpText" class="hp-text">0 / 0 HP</p>
+                  </div>
+                </article>
+              </div>
+
+              <div class="battle-bottom">
+                <div id="battleLog" class="battle-log"></div>
+                <div class="action-grid">
+                  <button id="actionSkill0" class="action-button">技能 1</button>
+                  <button id="actionSkill1" class="action-button">技能 2</button>
+                  <button id="actionSkill2" class="action-button">技能 3</button>
+                  <button id="actionSkill3" class="action-button">技能 4</button>
+                  <button id="actionCapture" class="action-button">投掷精灵球</button>
+                  <button id="actionItem" class="action-button">使用道具</button>
+                  <button id="actionRun" class="action-button">尝试逃跑</button>
+                  <button id="actionSwitch" class="action-button">切换精灵</button>
+                </div>
+              </div>
+              <div id="battleSwitchPanel" class="battle-switch-panel hidden"></div>
+            </div>
+
+            <div id="choiceOverlay" class="choice-overlay hidden">
+              <div class="choice-card">
+                <p class="choice-kicker">Key Choice</p>
+                <h2 id="choiceTitle">选择你的初始伙伴</h2>
+                <div id="choiceOptions" class="choice-options"></div>
+              </div>
+            </div>
+
+            <div id="evolutionOverlay" class="evolution-overlay hidden" aria-hidden="true">
+              <div class="evolution-core">
+                <span class="evolution-ring ring-a"></span>
+                <span class="evolution-ring ring-b"></span>
+                <span class="evolution-ring ring-c"></span>
+                <span class="evolution-flare"></span>
+                <p id="evolutionOverlayText" class="evolution-text">Evolution in progress...</p>
+              </div>
+            </div>
+
+            <div id="prologueCinematicOverlay" class="prologue-cinematic-overlay hidden" aria-hidden="true">
+              <div class="prologue-cinematic-stage">
+                <div id="prologueCinematicBackdrop" class="prologue-cinematic-backdrop"></div>
+                <img id="prologueCinematicLeft" class="prologue-cinematic-portrait left hidden" alt="left cinematic portrait" />
+                <img id="prologueCinematicRight" class="prologue-cinematic-portrait right hidden" alt="right cinematic portrait" />
+                <div class="prologue-cinematic-glow"></div>
+                <div class="prologue-cinematic-dialogue">
+                  <div id="prologueCinematicSpeaker" class="prologue-cinematic-speaker">旁白</div>
+                  <p id="prologueCinematicLine" class="prologue-cinematic-line">神兽之战仍在继续……</p>
+                  <span id="prologueCinematicHint" class="prologue-cinematic-hint">点击选项继续推进</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="saveMenuOverlay" class="save-menu-overlay hidden">
+              <div class="save-menu-card">
+                <p class="choice-kicker">Demo Save System</p>
+                <h2>开始冒险</h2>
+                <p id="saveMenuSlotHint" class="save-menu-hint">
+                  你可以新开一个演示档，或继续上次进度。
+                </p>
+
+                <div id="saveMenuRootActions" class="save-menu-actions">
+                  <button id="saveMenuNewButton" class="action-button" type="button">开始游戏</button>
+                  <button id="saveMenuContinueButton" class="action-button" type="button">继续游戏</button>
+                  <button id="saveMenuSelectButton" class="action-button" type="button">选择存档</button>
+                  <button id="saveMenuSettingsButton" class="action-button" type="button">存档工具</button>
+                  <button id="saveMenuHelpButton" class="action-button" type="button">操作说明</button>
+                </div>
+
+                <div id="saveMenuSelectActions" class="save-menu-select hidden">
+                  <div id="saveMenuSlotList" class="save-slot-list"></div>
+                  <button id="saveMenuSelectBackButton" class="secondary-button" type="button">返回主菜单</button>
+                </div>
+
+                <div id="saveMenuSettingsActions" class="save-menu-settings hidden">
+                  <p class="save-menu-settings-copy">这里保留存档工具，开局流程保持极简，不再显示自定义输入项。</p>
+
+                  <div class="save-menu-settings-actions">
+                    <button id="saveMenuExportButton" class="mini-button" type="button">导出当前存档</button>
+                    <button id="saveMenuImportButton" class="mini-button" type="button">导入到当前存档</button>
+                    <button id="saveMenuSettingsBackButton" class="secondary-button" type="button">返回主菜单</button>
+                  </div>
+                  <input id="saveMenuImportInput" type="file" accept="application/json,.json" class="hidden" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          <section class="card portrait-card">
+            <div class="section-heading">
+              <h2>剧情立绘</h2>
+              <span id="storyPortraitTag">Story Focus</span>
+            </div>
+            <div class="story-portrait-shell">
+              <div id="storyPortraitFrame" class="story-portrait-frame">
+                <span id="storyPortraitFallback">?</span>
+              </div>
+              <div class="story-portrait-copy">
+                <strong id="storyPortraitName">旅途记录</strong>
+                <p id="storyPortraitLine" class="objective-text">当前剧情焦点会显示在这里。</p>
+                <p id="objectiveText" class="objective-text">主线目标会显示在这里。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="section-heading">
+              <h2>Demo 进度看板</h2>
+              <span id="buildVersion">v0.9.0-demo.1</span>
+            </div>
+            <div class="controls-copy">
+              <p>已完成：首个道馆冲刺路线提示（离城双提示 + 补给员阶段指引）。</p>
+              <p>已完成：首个道馆奖励三选一（支持稍后领取并回城补领）。</p>
+              <p>已完成：道馆可选热身战（试炼官赛弥，不强制主线）。</p>
+              <p>进行中：围绕现有 demo 继续做可玩内容扩展与节奏打磨。</p>
+            </div>
+          </section>
+        </aside>
+      </main>
+
+      <section class="bottom-zone">
+        <section class="card dialogue-card">
+          <div class="section-heading">
+            <h2>对话记录</h2>
+            <span>自动保存</span>
+          </div>
+          <div id="dialogueLog" class="dialogue-log"></div>
+        </section>
+
+        <section id="functionCard" class="card function-card hidden">
+          <div class="section-heading">
+            <h2>功能面板</h2>
+            <span>默认折叠</span>
+          </div>
+          <div id="utilityDock" class="utility-buttons">
+            <button type="button" class="utility-button" data-panel="playerArtPanel" title="玩家形象">🎨</button>
+            <button type="button" class="utility-button" data-panel="alchemyPanelCard" title="进化工坊">🜂</button>
+            <button type="button" class="utility-button" data-panel="teamPanelCard" title="队伍">👥</button>
+            <button type="button" class="utility-button" data-panel="homePanelCard" title="家园仓库">🏡</button>
+            <button type="button" class="utility-button" data-panel="bagPanelCard" title="背包">🎒</button>
+            <button type="button" class="utility-button" data-panel="pokedexPanelCard" title="图鉴">📘</button>
+            <button type="button" class="utility-button" data-panel="controlPanelCard" title="操作">⚙️</button>
+          </div>
+
+          <section id="playerArtPanel" class="ai-card utility-panel collapsed">
+            <div class="section-heading">
+              <h2>玩家形象生成</h2>
+              <span id="playerArtServiceChip" class="status-chip offline">离线</span>
+            </div>
+            <form id="playerArtForm" class="ai-form">
+              <label class="field-label" for="playerArtPrompt">提示词</label>
+              <textarea
+                id="playerArtPrompt"
+                class="input-field input-area"
+                placeholder="例如：17岁训练家，白金短发，蓝白旅行外套，轻装背包，明亮二次元立绘，纯白背景"
+              ></textarea>
+              <div class="ai-field-row">
+                <button id="playerArtPresetButton" type="button" class="mini-button">选择系统精美立绘</button>
+                <button id="playerArtSuggest" type="button" class="mini-button">使用建议提示词</button>
+                <button id="playerArtGenerate" type="submit" class="mini-button">生成并替换主角立绘</button>
+              </div>
+            </form>
+            <div class="ai-status-block">
+              <p id="playerArtTaskStatus" class="ai-task-status">输入提示词后可直接生成玩家形象。</p>
+              <div id="playerArtTaskLog" class="ai-task-log"></div>
+            </div>
+
+            <div class="ai-status-block player-collection-block">
+              <div class="section-heading">
+                <h3>玩家立绘收藏</h3>
+                <span id="playerArtCapacity">0 / 3</span>
+              </div>
+              <p class="ai-task-status">初始最多收藏 3 张，每获得 1 枚徽章可收藏上限 +1。</p>
+              <div id="playerArtCollection" class="player-art-collection"></div>
+            </div>
+
+            <div class="ai-status-block">
+              <div class="section-heading">
+                <h3>NPC 立绘生成</h3>
+                <span id="npcArtServiceChip" class="status-chip offline">离线</span>
+              </div>
+              <label class="field-label" for="npcArtTarget">NPC</label>
+              <select id="npcArtTarget" class="input-field">
+                <option value="professor">教授雪松</option>
+                <option value="caretaker">照料员林</option>
+                <option value="scout">巡路员米拉</option>
+                <option value="leader">馆主阿斯特拉</option>
+                <option value="merchant">商店老板罗文</option>
+                <option value="quartermaster">补给员诺亚</option>
+                <option value="alchemist">炼金师芙拉</option>
+                <option value="ranger">洞窟向导雷奥</option>
+                <option value="fisher">水路调查员柚</option>
+                <option value="breeder">果园育成师玛芙</option>
+                <option value="captain">海湾队长赛伦</option>
+                <option value="ace">高岭王牌维迦</option>
+                <option value="warden">群岛守望者伊诺</option>
+              </select>
+              <label class="field-label" for="npcArtPrompt">提示词</label>
+              <textarea
+                id="npcArtPrompt"
+                class="input-field input-area"
+                placeholder="例如：anime NPC portrait, single character, clean line art, bright tone, solid white background"
+              ></textarea>
+              <div class="ai-field-row">
+                <button id="npcArtSuggest" type="button" class="mini-button">使用建议提示词</button>
+                <button id="npcArtGenerate" type="button" class="mini-button">生成并替换 NPC 立绘</button>
+              </div>
+              <p id="npcArtTaskStatus" class="ai-task-status">可为剧情 NPC 生成专属立绘。</p>
+              <div id="npcArtTaskLog" class="ai-task-log"></div>
+            </div>
+          </section>
+
+          <section id="alchemyPanelCard" class="utility-panel collapsed ai-card">
+            <div class="section-heading">
+              <h2>进化工坊</h2>
+              <span id="alchemyResourceSummary">Arcane 0 | Void 0</span>
+            </div>
+
+            <div class="alchemy-grid">
+              <article class="alchemy-card">
+                <h3>共鸣融合</h3>
+                <p>选择两只精灵进行融合，共鸣后保留主体并吸收协同特性。</p>
+                <label class="field-label" for="fusionTargetSelect">目标精灵</label>
+                <select id="fusionTargetSelect" class="input-field"></select>
+                <label class="field-label" for="fusionPartnerSelect">融合素材（后备）</label>
+                <select id="fusionPartnerSelect" class="input-field"></select>
+                <button id="fusionActionButton" type="button" class="mini-button team-switch-button">
+                  执行融合（消耗 Arcane x1）
+                </button>
+                <button id="fusionPresetBatchButton" type="button" class="mini-button team-switch-button">
+                  生成默认融合立绘批次
+                </button>
+              </article>
+
+              <article class="alchemy-card">
+                <h3>渊噬进化</h3>
+                <p>由目标精灵吞噬元素/道具能量，走高风险强化路径。</p>
+                <label class="field-label" for="devourTargetSelect">进化目标</label>
+                <select id="devourTargetSelect" class="input-field"></select>
+                <label class="field-label" for="devourElementSelect">吞噬元素</label>
+                <select id="devourElementSelect" class="input-field">
+                  <option value="grass">草</option>
+                  <option value="fire">火</option>
+                  <option value="water">水</option>
+                  <option value="bug">虫</option>
+                  <option value="electric">电</option>
+                  <option value="rock">岩</option>
+                  <option value="fairy">妖精</option>
+                  <option value="sun">太阳</option>
+                  <option value="weapon">武器</option>
+                </select>
+                <button id="devourActionButton" type="button" class="mini-button team-switch-button">
+                  执行渊噬（消耗元素 x2 + Void x1）
+                </button>
+              </article>
+            </div>
+
+            <div class="ai-status-block">
+              <p id="alchemyTaskStatus" class="ai-task-status">进化工坊已待命。</p>
+              <div id="alchemyLog" class="ai-task-log"></div>
+            </div>
+          </section>
+
+          <section id="teamPanelCard" class="utility-panel collapsed">
+            <div class="section-heading">
+              <h2>队伍</h2>
+              <span id="reserveCount">后备 0</span>
+            </div>
+            <div id="teamPanel" class="team-panel"></div>
+          </section>
+
+          <section id="homePanelCard" class="utility-panel collapsed">
+            <div class="section-heading">
+              <h2>家园仓库</h2>
+              <span id="homeCount">仓库 0</span>
+            </div>
+            <div id="homePanel" class="team-panel"></div>
+          </section>
+
+          <section id="bagPanelCard" class="utility-panel collapsed">
+            <div class="section-heading">
+              <h2>背包</h2>
+              <span id="coinsCount">0 金币</span>
+            </div>
+            <div id="bagPanel" class="team-panel"></div>
+          </section>
+
+          <section id="pokedexPanelCard" class="utility-panel collapsed">
+            <div class="section-heading">
+              <h2>图鉴</h2>
+              <span id="seenCount">发现 0</span>
+            </div>
+            <div id="pokedexPanel" class="pokedex-panel"></div>
+          </section>
+
+          <section id="controlPanelCard" class="utility-panel collapsed">
+            <h2>操作说明</h2>
+            <div class="controls-copy">
+              <p>`WASD` / 方向键移动</p>
+              <p>`空格` / `E` / `Enter` 与 NPC 或场景互动</p>
+              <p>战斗中按 `I` 快速打开道具面板（QA 模式可按 `F6` 一键补给）</p>
+              <p>草丛与水面会触发遭遇；避怪丹只屏蔽普通遭遇，不屏蔽特殊生态点。</p>
+            </div>
+            <button id="resetButton" class="secondary-button">重新开始</button>
+          </section>
+        </section>
+      </section>
+    </div>
+
+<script src="version.js?v=20260328l"></script>
+<script src="assets.generated.js?v=20260328l"></script>
+<script src="assets.js?v=20260328l"></script>
+<script src="src/game/globals.js?v=20260328l"></script>
+<script src="src/game/balance-config.js?v=20260328l"></script>
+<script src="src/game/bootstrap-ai.js?v=20260328l"></script>
+<script src="src/game/world-events.js?v=20260328l"></script>
+<script src="src/game/battle-system.js?v=20260328l"></script>
+<script src="src/game/evolution-pipeline.js?v=20260328l"></script>
+<script src="src/game/ui-panels.js?v=20260328l"></script>
+<script src="src/game/rendering.js?v=20260328l"></script>
+<script src="game.js?v=20260328l"></script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+name = "vibecoding-game"
+pages_build_output_dir = "."
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# R2 bucket for generated AI images
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "game-assets"
+# After creating the bucket and enabling public access, set R2_PUBLIC_URL as a secret:
+#   npx wrangler pages secret put R2_PUBLIC_URL
+# Example value: https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev
+
+# KV namespace for task state and prompt cache
+# After creating the KV namespace, replace PLACEHOLDER_KV_ID with the actual ID
+[[kv_namespaces]]
+binding = "AI_CACHE"
+id = "PLACEHOLDER_KV_ID"
+
+# Secrets (set via wrangler CLI, not committed to source):
+#   npx wrangler pages secret put AISERVICEPROXY_API_KEY
+#   npx wrangler pages secret put GEMINI_API_KEY
+#   npx wrangler pages secret put R2_PUBLIC_URL
+#
+# Optional env vars (can also be set as secrets):
+#   RUNTIME_IMAGE_PROVIDER=proxy        (or gemini-official)
+#   AISERVICEPROXY_IMAGE_MODEL=banana-pro
+#   GEMINI_IMAGE_MODEL=gemini-3.1-flash-image-preview
+#   GEMINI_TEXT_MODEL=gemini-2.5-flash

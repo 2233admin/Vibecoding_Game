@@ -1,0 +1,40 @@
+logs/
+art-pipeline/logs/
+.wrangler/
+node_modules/
+tmp-image-headers.txt
+tmp-image-request.json
+tmp-image-response.json
+.env
+.env.*
+!.env.example
+
+# 图片素材（体积大或二进制，不上传 GitHub）
+IMG/
+assets/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.ico
+*.svg
+
+# 临时文件
+tmp_*.html
+tmp_*.css
+tmp_*.mjs
+tmp_*.json
+tmp_trace*.mjs
+tmp_qa_screenshots/
+
+# AI 缓存
+.ai-portrait-cache.json
+
+# 含敏感 Token 的本地配置（绝不上传）
+config/gitlab_config.json
+
+# 本地 AI 工具配置（含敏感 token）
+.claude/
+.codex/

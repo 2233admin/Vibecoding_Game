@@ -1,95 +1,260 @@
-# AICreativeEvolution
+﻿# GBIT Monster Quest
 
-Push test from Codex on 2026-03-25.
+一个可本地直接运行的宝可梦风单机原型，包含这些系统：
 
+- 跑图探索
+- 野外遭遇
+- 回合制战斗
+- 捕捉怪兽
+- 等级成长与进化
+- 主线剧情推进
+- 道馆挑战
+- 图鉴记录
+- 自动存档
 
+## 当前版本
 
-## Getting started
+- `v0.9.0-demo.1`（`2026-03-27`）
+- 代号：`Mond Meadow Sprint`
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+版本规则见 [docs/versioning.md](./docs/versioning.md)。
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+常用命令：
 
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+```bash
+npm run version:show
+npm run version:sync
 ```
-cd existing_repo
-git remote add origin https://comgitlab.g-bits.com/cenjy/aicreativeevolution.git
-git branch -M main
-git push -uf origin main
+
+## 运行方式
+
+直接在浏览器中打开 [index.html](./index.html) 即可。
+
+如果你更想用本地静态服务，也可以在当前目录运行任意静态服务器再访问页面。
+
+如果你要使用“自然语言实时生成怪兽立绘”的 AI 功能，推荐直接运行：
+
+```bash
+npm run dev
 ```
 
-## Integrate with your tools
+然后打开：
 
-- [ ] [Set up project integrations](https://comgitlab.g-bits.com/cenjy/aicreativeevolution/-/settings/integrations)
+```text
+http://127.0.0.1:4310
+```
 
-## Collaborate with your team
+## 操作
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+- `WASD` / 方向键: 移动
+- `E` / `Enter`: 互动
+- 战斗中点击按钮释放技能、捕捉或逃跑
 
-## Test and Deploy
+## 主线流程
 
-Use the built-in continuous integration in GitLab.
+1. 在晨曦镇找到教授并领取初始伙伴
+2. 去 1 号道路捕捉 2 只野生怪兽
+3. 挑战巡路员，证明你已经掌握基础战斗
+4. 回去找教授领取道馆通行证
+5. 进入道馆击败馆主，拿下第一枚徽章
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## 说明
 
-***
+- 游戏会使用浏览器 `localStorage` 自动保存进度
+- “重开新档” 会清空当前存档并从头开始
+- 当前版本是原型，采用原创怪兽名称与简化规则，便于后续继续扩展地图、剧情、商店、技能和更多图鉴内容
 
-# Editing this README
+## 加入美术资源
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+项目已经预留了本地资源入口，配置文件在 [assets.js](./assets.js)。
 
-## Suggestions for a good README
+你可以按下面几类逐步替换：
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- `scene`: 整张场景底图，例如城镇、道路、道馆的大背景
+- `tiles`: 地块和建筑小图，例如地面、草丛、墙、喷泉、研究所、道馆门
+- `characters`: 玩家和 NPC 立绘或顶视角精灵
+- `monsters`: 战斗界面的怪兽头像或立绘
 
-## Name
-Choose a self-explaining name for your project.
+推荐尺寸：
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- 地块：`48x48`
+- 角色：`36x44` 或接近这个比例
+- 怪兽战斗图：`96x96` 或更大正方形
+- 场景底图：与画布比例接近即可，当前画布是 `768x576`
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+接入方式很简单：
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+1. 把图片放进你自己的本地目录，比如 `assets/tiles/`、`assets/characters/player/`、`assets/characters/npc/`
+2. 打开 [assets.js](./assets.js)
+3. 把对应键值取消注释并改成你的文件路径
+4. 刷新浏览器页面
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+如果某个资源没配置，游戏会自动回退到代码绘制的默认风格，所以你可以边做边替换，不需要一次性补齐。
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## 运行时与美术管线解耦
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+现在项目分成两条线：
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- 游戏运行时资源：`assets/` + [assets.generated.js](./assets.generated.js)
+- 美术生产管线：`art-pipeline/`（独立输出，不会自动影响游戏）
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+推荐流程（monster / character / scene / tile 都适用）：
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+1. 在美术管线生成（只写入 `art-pipeline/`）：
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+```bash
+npm run art:generate:monster -- --id sprigoon
+npm run art:generate:character -- --id scout
+npm run art:generate:scene -- --id town
+npm run art:generate:tile -- --id town_ground
+```
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+批量生成 20 个通用 NPC 备用立绘：
 
-## License
-For open source projects, say how it is licensed.
+```bash
+# 在线高质量生成（需要 AISERVICEPROXY_API_KEY）
+npm run art:generate:npc:batch
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+# 离线占位生成（无需 API key）
+npm run art:generate:npc:placeholders
+```
+
+2. 验收后再发布到游戏运行时（按类型）：
+
+```bash
+npm run publish:assets -- monster
+npm run publish:assets -- character
+```
+
+只发布指定资源：
+
+```bash
+npm run publish:assets -- character scout
+npm run publish:assets -- monster sprigoon
+```
+
+## ComfyUI 本地生成
+
+我已经把项目接成了“ComfyUI 生成 -> 保存到项目 `assets/` -> 游戏自动读取”的流程。
+
+相关文件：
+
+- 配置文件：[comfyui.config.json](./comfyui.config.json)
+- 生成脚本：[scripts/generate-comfy-asset.mjs](./scripts/generate-comfy-asset.mjs)
+- 预设提示词：[scripts/comfy-presets.mjs](./scripts/comfy-presets.mjs)
+- 自动资源清单：[assets.generated.js](./assets.generated.js)
+- 手动覆盖清单：[assets.js](./assets.js)
+
+### 当前默认模型
+
+已经按你给的模型路径写入默认配置：
+
+`D:\comfyui\ComfyUI_Backup\ComfyUI_FLUX\models\checkpoints\chenkin-noob0.38_0309.safetensors`
+
+默认会使用它的文件名：
+
+`chenkin-noob0.38_0309.safetensors`
+
+如果你的 ComfyUI 里显示的 checkpoint 名称不是这个，就把 [comfyui.config.json](./comfyui.config.json) 里的 `checkpointName` 改成 ComfyUI 实际识别到的名字。
+
+### 先启动 ComfyUI
+
+默认地址写的是：
+
+`http://127.0.0.1:8188`
+
+如果你的 ComfyUI 不是这个端口，就修改 [comfyui.config.json](./comfyui.config.json) 里的 `baseUrl`。
+
+### 常用命令
+
+列出怪兽预设：
+
+```bash
+npm run generate:monster:list
+```
+
+生成一张怪兽立绘并注册到游戏：
+
+```bash
+npm run generate:monster -- sprigoon
+```
+
+生成场景图：
+
+```bash
+npm run generate:scene -- town
+```
+
+自定义提示词生成：
+
+```bash
+npm run generate:monster -- sprigoon "cute grass seed cat creature, leaf sprout on back, anime creature portrait, centered, vibrant"
+```
+
+如果你想完全手动控制参数，也可以直接运行：
+
+```bash
+node scripts/generate-comfy-asset.mjs --type monster --id sprigoon --steps 32 --cfg 6
+```
+
+### 生成结果会去哪里
+
+- 怪兽：`assets/monsters/<normal|legendary>/<species_id>/<base|fusion|devour>/stage<0|1|2>/<asset_key>.png`
+- 角色：`assets/characters/player/<id>.png` 或 `assets/characters/npc/<id>.png`
+- 场景：`assets/scene/<id>.png`
+- 地块：`assets/tiles/<id>.png`
+
+脚本会自动更新 [assets.generated.js](./assets.generated.js)，所以刷新 [index.html](./index.html) 后游戏就能直接读到新资源。
+
+### 建议你先生成哪些
+
+最推荐先做这几类，因为效果最稳定：
+
+- `monster`: 战斗立绘，最适合用 SDXL 直接出图
+- `scene`: 城镇、道路、道馆大背景
+
+`character` 和 `tile` 也能生成，但通常还需要你后续手动修一下，尤其是顶视角角色和规则地块。
+
+## 自然语言实时生成立绘
+
+这版还额外接了一个本地 AI 服务，适合在游戏运行时直接输入描述生成怪兽立绘。
+
+### 启动步骤
+
+1. 启动你的 ComfyUI
+2. 在项目目录运行：
+
+```bash
+npm run dev
+```
+
+3. 打开：
+
+```text
+http://127.0.0.1:4310
+```
+
+4. 在右侧的“AI 立绘工坊”里：
+
+- 选择目标怪兽
+- 输入自然语言描述
+- 点击“生成当前怪兽立绘”
+
+此外，你还可以在右侧“玩家形象生成”中输入提示词，直接替换主角立绘。
+
+生成完成后：
+
+- 图片会写入 `assets/monsters/<normal|legendary>/<species_id>/<base|fusion|devour>/stage<0|1|2>/<asset_key>.png`
+- [assets.generated.js](./assets.generated.js) 会自动更新
+- 战斗界面和图鉴会直接读到最新立绘
+
+### 实时模式目前的行为
+
+- 同一只怪兽、同一句提示词会优先命中本地缓存
+- 任务会按队列顺序执行，避免同时塞太多生成请求
+- 页面里会显示排队、生成中、完成或失败状态
+
+### 相关文件
+
+- 本地服务：[scripts/dev-server.mjs](./scripts/dev-server.mjs)
+- 前端 AI 面板逻辑：[game.js](./game.js)

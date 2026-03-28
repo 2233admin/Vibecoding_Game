@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Game Skill"
+  short_description: "Demo rebuild, lore, and AI art core"
+  default_prompt: "Use this skill for the GBIT AI game project to recover project context quickly, follow the world lore and AI art pipeline, stay inside the contest demo scope, and rebuild the playable demo without losing validated value."

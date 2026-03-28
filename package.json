@@ -1,0 +1,42 @@
+{
+  "name": "gbit-monster-quest",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "version:sync": "node scripts/sync-version.mjs",
+    "version:show": "node -e \"const fs=require('fs'); const v=JSON.parse(fs.readFileSync('version.json','utf8')); console.log(v.version, v.codename, v.buildDate);\"",
+    "dev": "node scripts/dev-server.mjs",
+    "dev:ai": "node scripts/dev-server.mjs",
+    "cf:dev": "wrangler pages dev . --port 4310",
+    "deploy": "wrangler pages deploy .",
+    "contest:bootstrap": "node scripts/bootstrap-competition-project.mjs",
+    "generate:asset": "node scripts/generate-runtime-asset.mjs",
+    "generate:monster": "node scripts/generate-runtime-asset.mjs --type monster",
+    "generate:monster:list": "node scripts/generate-runtime-asset.mjs --help",
+    "generate:character": "node scripts/generate-runtime-asset.mjs --type character",
+    "generate:character:list": "node scripts/generate-runtime-asset.mjs --help",
+    "art:generate:asset": "node scripts/generate-runtime-asset.mjs --output-root art-pipeline/generated --manifest art-pipeline/assets.generated.js",
+    "art:generate:monster": "node scripts/generate-runtime-asset.mjs --type monster --output-root art-pipeline/generated --manifest art-pipeline/assets.generated.js",
+    "art:generate:monster:list": "node scripts/generate-runtime-asset.mjs --help",
+    "art:generate:character": "node scripts/generate-runtime-asset.mjs --type character --output-root art-pipeline/generated --manifest art-pipeline/assets.generated.js",
+    "art:generate:character:list": "node scripts/generate-runtime-asset.mjs --help",
+    "art:generate:scene": "node scripts/generate-comfy-asset.mjs --type scene --output-root art-pipeline/generated --manifest art-pipeline/assets.generated.js",
+    "art:generate:scene:list": "node scripts/generate-comfy-asset.mjs --type scene --list",
+    "art:generate:tile": "node scripts/generate-comfy-asset.mjs --type tile --output-root art-pipeline/generated --manifest art-pipeline/assets.generated.js",
+    "art:generate:tile:list": "node scripts/generate-comfy-asset.mjs --type tile --list",
+    "generate:pixel:characters": "node scripts/generate-pixel-character-assets.mjs",
+    "generate:proxy:characters": "node scripts/generate-proxy-character-assets.mjs",
+    "art:generate:npc:batch": "node scripts/generate-proxy-generic-npcs.mjs",
+    "art:generate:npc:placeholders": "node scripts/generate-generic-npc-placeholders.mjs",
+    "publish:assets": "node scripts/publish-generated-assets.mjs",
+    "publish:characters": "node scripts/publish-character-assets.mjs",
+    "migrate:monster:layout": "node scripts/migrate-monster-assets-layout.mjs",
+    "generate:scene": "node scripts/generate-comfy-asset.mjs --type scene",
+    "generate:scene:list": "node scripts/generate-comfy-asset.mjs --type scene --list"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2",
+    "puppeteer-core": "^24.40.0",
+    "wrangler": "^3.0.0"
+  }
+}
