@@ -39,3 +39,10 @@ config/gitlab_config.json
 .claude/
 .codex/
 .gstack/
+
+# 文档（不上传）
+docs/
+
+# 聊天记录
+chat_exports/
+chat_exports.zip

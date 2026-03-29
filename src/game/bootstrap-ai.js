@@ -6,6 +6,9 @@
   attachEvents()
   applyBuildVersionBadge()
   preloadArtAssets()
+  if (typeof loadSceneCollisionConfig === "function") {
+    loadSceneCollisionConfig()
+  }
   initializeSaveSystem()
   openSaveMenu()
   hydratePlayerPortraitRuntimeAssets()

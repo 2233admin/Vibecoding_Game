@@ -462,12 +462,7 @@ body::after {
 }
 
 .in-canvas-story-dock {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: min(320px, 34%);
-  z-index: 3;
-  pointer-events: none;
+  display: none;
 }
 
 .in-canvas-story-card {
@@ -1410,19 +1405,36 @@ body.in-game-menu-open .in-game-hud {
 .prologue-cinematic-backdrop {
   position: absolute;
   inset: 0;
-  background:
+  --prologue-backdrop-image: none;
+  --prologue-backdrop-tint:
     radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.2), transparent 40%),
     linear-gradient(180deg, rgba(61, 81, 109, 0.55), rgba(28, 40, 58, 0.68));
+  background:
+    var(--prologue-backdrop-tint),
+    var(--prologue-backdrop-image);
+  background-size: cover, cover;
+  background-position: center center, center center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.prologue-cinematic-backdrop.has-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(7, 12, 20, 0.22) 0%, rgba(7, 12, 20, 0.5) 100%),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.08), transparent 45%);
 }
 
 .prologue-cinematic-overlay[data-mode="devour"] .prologue-cinematic-backdrop {
-  background:
+  --prologue-backdrop-tint:
     radial-gradient(circle at 50% 24%, rgba(229, 180, 255, 0.22), transparent 42%),
     linear-gradient(180deg, rgba(70, 58, 117, 0.55), rgba(33, 33, 73, 0.74));
 }
 
 .prologue-cinematic-overlay[data-state="fracture"] .prologue-cinematic-backdrop {
-  background:
+  --prologue-backdrop-tint:
     radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.56), transparent 48%),
     linear-gradient(180deg, rgba(108, 123, 160, 0.44), rgba(34, 47, 70, 0.66));
 }
@@ -1687,6 +1699,21 @@ body.in-game-menu-open .in-game-hud {
 
 .choice-overlay[data-theme="mirror"] .choice-options[data-count="1"] {
   max-width: min(760px, 100%);
+}
+
+.choice-overlay[data-theme="starter"] .choice-card {
+  width: min(940px, 100%);
+}
+
+.choice-overlay[data-theme="starter"] .choice-option-media {
+  aspect-ratio: 16 / 10;
+  background: radial-gradient(circle at top, rgba(248, 252, 255, 0.95), rgba(214, 231, 244, 0.92));
+}
+
+.choice-overlay[data-theme="starter"] .choice-option-image {
+  object-fit: contain;
+  padding: 8px;
+  background: radial-gradient(circle at top, #f4f9ff, #e2edf6);
 }
 
 .choice-options {
@@ -2730,12 +2757,17 @@ textarea:focus-visible {
   flex-direction: column;
   overflow: hidden;
   pointer-events: auto;
-  background: linear-gradient(
-    180deg,
-    rgba(10, 15, 24, 0.18) 0%,
-    rgba(10, 15, 24, 0.0) 55%,
-    rgba(10, 15, 24, 0.65) 100%
-  );
+  background: transparent;
+  isolation: isolate;
+}
+
+.vn-dialogue-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .vn-dialogue-layer.hidden {
@@ -2750,6 +2782,7 @@ textarea:focus-visible {
   align-items: flex-end;
   pointer-events: none;
   min-height: 0;
+  z-index: 1;
 }
 
 /* ── 立绘容器 ── */
@@ -2757,27 +2790,28 @@ textarea:focus-visible {
 .vn-char-right {
   position: absolute;
   bottom: 0;
-  width: 46%;
-  max-height: 100%;
+  width: min(39%, 540px);
+  height: 116%;
+  max-height: none;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   transition:
-    filter 0.3s ease,
-    transform 0.35s ease,
-    opacity 0.3s ease;
+    filter 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
-.vn-char-left  { left: 0;  transform-origin: bottom left; }
-.vn-char-right { right: 0; transform-origin: bottom right; }
+.vn-char-left  { left: -4%;  transform-origin: bottom left; }
+.vn-char-right { right: -4%; transform-origin: bottom right; }
 
 /* 说话方：高亮 + 轻微前移 */
-.vn-char-left.vn-active  { filter: brightness(1.0); transform: translateX(3%)  scale(1.02); }
-.vn-char-right.vn-active { filter: brightness(1.0); transform: translateX(-3%) scale(1.02); }
+.vn-char-left.vn-active  { filter: brightness(1) saturate(1); transform: translateX(2%) scale(1.02); }
+.vn-char-right.vn-active { filter: brightness(1) saturate(1); transform: translateX(-2%) scale(1.02); }
 
 /* 沉默方：暗化 + 缩小 */
-.vn-char-left.vn-silent  { filter: brightness(0.4) saturate(0.5); transform: scale(0.95); opacity: 0.85; }
-.vn-char-right.vn-silent { filter: brightness(0.4) saturate(0.5); transform: scale(0.95); opacity: 0.85; }
+.vn-char-left.vn-silent  { filter: brightness(0.5) saturate(0.32) grayscale(0.16); transform: scale(0.99); opacity: 0.9; }
+.vn-char-right.vn-silent { filter: brightness(0.5) saturate(0.32) grayscale(0.16); transform: scale(0.99); opacity: 0.9; }
 
 /* ── 伪 L2D 呼吸动画 ── */
 @keyframes vn-breathing {
@@ -2793,18 +2827,73 @@ textarea:focus-visible {
 /* ── 立绘内容区 ── */
 .vn-portrait-inner {
   width: 100%;
+  height: 100%;
+  max-height: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  overflow: visible;
+  will-change: transform, filter, opacity;
+}
+
+@keyframes vn-portrait-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes vn-portrait-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.vn-portrait-inner.vn-enter-left {
+  animation: vn-portrait-enter-left 120ms ease-out both;
+}
+
+.vn-portrait-inner.vn-enter-right {
+  animation: vn-portrait-enter-right 120ms ease-out both;
 }
 
 .vn-portrait-img {
-  width: 100%;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   object-position: bottom;
-  filter: drop-shadow(0 14px 22px rgba(10, 17, 27, 0.5));
+  background: transparent;
   display: block;
+  mix-blend-mode: multiply;
+}
+
+.vn-portrait-img.vn-portrait-opaque {
+  filter: drop-shadow(0 14px 22px rgba(10, 17, 27, 0.5)) contrast(1.05) saturate(0.98);
+}
+
+.vn-portrait-img.vn-portrait-alpha {
+  filter: drop-shadow(0 14px 22px rgba(10, 17, 27, 0.5)) saturate(0.98);
+}
+
+.vn-focus-shift .vn-char-left.vn-silent .vn-portrait-img,
+.vn-focus-shift .vn-char-right.vn-silent .vn-portrait-img {
+  filter: blur(1px) drop-shadow(0 12px 18px rgba(10, 17, 27, 0.42)) saturate(0.72) !important;
+}
+
+.vn-focus-shift .vn-char-left.vn-active .vn-portrait-img,
+.vn-focus-shift .vn-char-right.vn-active .vn-portrait-img {
+  filter: drop-shadow(0 16px 24px rgba(10, 17, 27, 0.55)) saturate(1.02) !important;
 }
 
 /* ── 立绘 fallback 色块 ── */
@@ -2833,26 +2922,41 @@ textarea:focus-visible {
   cursor: pointer;
   user-select: none;
   position: relative;
+  z-index: 2;
 }
 
 /* ── 角色名标签 ── */
 .vn-name-bar {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
   margin-bottom: -1px;
-  padding: 6px 16px;
-  border-radius: 10px 10px 0 0;
-  background: rgba(12, 18, 28, 0.92);
-  border: 1px solid rgba(255, 204, 0, 0.28);
+  padding: 7px 16px 7px 12px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, rgba(20, 31, 49, 0.94), rgba(10, 16, 28, 0.94));
+  border: 1px solid rgba(163, 191, 226, 0.32);
   border-bottom: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 14px rgba(0, 0, 0, 0.32);
+}
+
+.vn-name-bar::before {
+  content: "";
+  width: 6px;
+  height: 16px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #67bcff, #e8c16c);
 }
 
 .vn-name-text {
-  color: #ffcc00;
+  color: #f6d995;
   font-family: var(--font-ui);
   font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  text-shadow: 0 1px 6px rgba(255, 204, 0, 0.45);
+  text-shadow: 0 1px 6px rgba(246, 217, 149, 0.36);
 }
 
 /* ── 对话正文框 ── */
@@ -2860,8 +2964,8 @@ textarea:focus-visible {
   margin: 0;
   padding: 14px 18px 36px;
   border-radius: 0 16px 16px 16px;
-  background: rgba(0, 0, 0, 0.85);
-  border: 1px solid rgba(180, 200, 230, 0.22);
+  background: rgba(10, 10, 20, 0.82);
+  border: 1px solid rgba(164, 191, 227, 0.3);
   color: var(--ds-text-primary, #eaf2ff);
   font-family: var(--font-ui);
   font-size: 1rem;
@@ -2869,8 +2973,8 @@ textarea:focus-visible {
   font-weight: 500;
   min-height: 5em;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 26px rgba(0, 0, 0, 0.46);
   word-break: break-all;
 }
 
@@ -2932,6 +3036,15 @@ textarea:focus-visible {
   .vn-char-left,
   .vn-char-right {
     width: 44%;
+    height: 108%;
+  }
+
+  .vn-char-left {
+    left: -8%;
+  }
+
+  .vn-char-right {
+    right: -8%;
   }
 
   .vn-portrait-fallback {

@@ -918,7 +918,124 @@ function consumeRepelStep() {
   }
 }
 
+function evaluateSceneTransitionRequirements(requirements) {
+  if (!requirements || typeof requirements !== "object") {
+    return { allowed: true, message: "" }
+  }
+
+  const denyMessage = String(requirements.denyMessage || "").trim()
+  const fallbackMessage = denyMessage || "前方道路暂未开放。"
+  const minStoryStage = Number(requirements.minStoryStage)
+  if (Number.isFinite(minStoryStage) && (Number(state.storyStage) || 0) < minStoryStage) {
+    return { allowed: false, message: fallbackMessage }
+  }
+
+  const minPartySize = Number(requirements.minPartySize)
+  if (Number.isFinite(minPartySize) && state.player.party.length < minPartySize) {
+    return { allowed: false, message: fallbackMessage }
+  }
+
+  const singleFlag = String(requirements.requireFlag || "").trim()
+  if (singleFlag && !state.flags?.[singleFlag]) {
+    return { allowed: false, message: fallbackMessage }
+  }
+
+  if (Array.isArray(requirements.requireFlags)) {
+    const allSatisfied = requirements.requireFlags.every((flag) => state.flags?.[String(flag).trim()])
+    if (!allSatisfied) {
+      return { allowed: false, message: fallbackMessage }
+    }
+  }
+
+  if (Array.isArray(requirements.requireAnyFlags)) {
+    const anySatisfied = requirements.requireAnyFlags.some((flag) => state.flags?.[String(flag).trim()])
+    if (!anySatisfied) {
+      return { allowed: false, message: fallbackMessage }
+    }
+  }
+
+  return { allowed: true, message: "" }
+}
+
+function runSceneTransitionPostAction(postAction) {
+  if (!postAction) {
+    return
+  }
+
+  if (postAction === "town_route_departure") {
+    if (!state.flags.routeGuideShown) {
+      state.flags.routeGuideShown = true
+      addDialogue("路线提示: 先在草丛完成 2 次捕捉，再击败蚀星先遣洛克。")
+      addDialogue("路线提示: 洛克后还有执旗官维萝，通过两战后回城领道馆通行证。")
+    }
+    if (shouldTriggerChosenLegendCubEncounter()) {
+      triggerChosenLegendCubEncounter()
+    }
+    return
+  }
+
+  if (postAction === "town_gym_entry") {
+    if (!state.flags.gymAideIntroShown && !state.flags.gymAideDefeated) {
+      state.flags.gymAideIntroShown = true
+      addDialogue("提示: 馆内的试炼官赛弥可提供一场可选热身战，帮你调整挑战节奏。")
+    }
+    return
+  }
+
+  if (postAction === "meadow_lake_departure") {
+    if (!hasOldRodAccess() && hasWaterTypeCompanion()) {
+      unlockOldRod("水系伙伴的指引")
+      addDialogue("你的水系伙伴帮你找到了可用渔具，后续可直接调查水纹点。")
+    } else if (!hasOldRodAccess() && !state.flags.oldRodHintShown) {
+      state.flags.oldRodHintShown = true
+      addDialogue("提示：旧钓竿不会再卡主线过图。")
+      addDialogue("你可通过补给员诺亚、水系伙伴线索、或野外宝箱获得旧钓竿。")
+    }
+  }
+}
+
+function handleSceneCollisionTransition(previousX, previousY) {
+  if (typeof getSceneCollisionTransition !== "function") {
+    return false
+  }
+
+  const transition = getSceneCollisionTransition(state.currentMap, state.player.x, state.player.y)
+  if (!transition) {
+    return false
+  }
+
+  const requirement = evaluateSceneTransitionRequirements(transition.requires)
+  if (!requirement.allowed) {
+    state.player.x = previousX
+    state.player.y = previousY
+    const denyText = String(transition.denyMessage || requirement.message || "").trim()
+    if (denyText) {
+      addDialogue(denyText)
+    }
+    return true
+  }
+
+  if (transition.onSuccess?.healParty) {
+    healParty()
+  }
+  if (transition.onSuccess?.healReserve && typeof healReserveMonsters === "function") {
+    healReserveMonsters()
+  }
+
+  const toMap = String(transition.toMap || "").trim()
+  if (!toMap) {
+    return false
+  }
+  changeMap(toMap, transition.toX, transition.toY, transition.message || "")
+  runSceneTransitionPostAction(transition.postAction)
+  return true
+}
+
 function handleTileEvent(previousX, previousY) {
+  if (handleSceneCollisionTransition(previousX, previousY)) {
+    return
+  }
+
   const tile = getTile(state.currentMap, state.player.x, state.player.y)
 
   if (handleMapTransition(tile, previousX, previousY)) {
@@ -1941,6 +2058,7 @@ function interactProfessor() {
             portrait: "professor",
             text: "每位训练家都需要一位可靠的起点伙伴。",
           },
+          createVNPlayerLine("我准备好了，想尽快开始图鉴采样。"),
           {
             position: "left",
             name: "教授 雪松",
@@ -1951,47 +2069,17 @@ function interactProfessor() {
         {
           onComplete: () => {
             addDialogue("教授雪松: 每位训练家都需要一位可靠的起点伙伴。")
+            addDialogue(`${getVNPlayerDisplayName()}: 我准备好了，想尽快开始图鉴采样。`)
             addDialogue("教授雪松: 选一只与你一起记录这片区域的图鉴吧。")
-            openChoice("选择你的初始伙伴", [
-              {
-                label: "芽团兽",
-                description: "草系，耐久稳定，适合慢慢推进。",
-                onSelect: () => recruitStarter("sprigoon"),
-              },
-              {
-                label: "炽团犬",
-                description: "火系，输出直接，前期打起来很爽快。",
-                onSelect: () => recruitStarter("embercub"),
-              },
-              {
-                label: "泡鳍兽",
-                description: "水系，攻守平衡，容错比较高。",
-                onSelect: () => recruitStarter("aquaffin"),
-              },
-            ])
+            openChoice("选择你的初始伙伴", buildStarterChoiceOptions(), { theme: "starter" })
           },
         }
       )
     } else {
       addDialogue("教授雪松: 每位训练家都需要一位可靠的起点伙伴。")
+      addDialogue(`${getVNPlayerDisplayName()}: 我准备好了，想尽快开始图鉴采样。`)
       addDialogue("教授雪松: 选一只与你一起记录这片区域的图鉴吧。")
-      openChoice("选择你的初始伙伴", [
-        {
-          label: "芽团兽",
-          description: "草系，耐久稳定，适合慢慢推进。",
-          onSelect: () => recruitStarter("sprigoon"),
-        },
-        {
-          label: "炽团犬",
-          description: "火系，输出直接，前期打起来很爽快。",
-          onSelect: () => recruitStarter("embercub"),
-        },
-        {
-          label: "泡鳍兽",
-          description: "水系，攻守平衡，容错比较高。",
-          onSelect: () => recruitStarter("aquaffin"),
-        },
-      ])
+      openChoice("选择你的初始伙伴", buildStarterChoiceOptions(), { theme: "starter" })
     }
     return
   }
@@ -2373,6 +2461,112 @@ function openDoctrineEvolutionGuidance(path) {
   ])
 }
 
+function getVNPlayerDisplayName() {
+  const name = String(state.playerName || "").trim()
+  return name || "你"
+}
+
+const STARTER_CHOICE_CONFIG = Object.freeze([
+  {
+    speciesId: "sprigoon",
+    label: "芽团兽",
+    description: "草系，耐久稳定，适合慢慢推进。",
+  },
+  {
+    speciesId: "embercub",
+    label: "炽团犬",
+    description: "火系，输出直接，前期打起来很爽快。",
+  },
+  {
+    speciesId: "aquaffin",
+    label: "泡鳍兽",
+    description: "水系，攻守平衡，容错比较高。",
+  },
+])
+
+function getChoiceMonsterImageSrc(speciesId) {
+  const normalizedId = String(speciesId || "").trim()
+  if (!normalizedId) {
+    return ""
+  }
+
+  const candidateKeys = [
+    normalizedId,
+    `dex_${normalizedId}_v1`,
+    `dex_${normalizedId}_v2`,
+    `preset_${normalizedId}`,
+  ]
+
+  if (typeof getMonsterArtKeys === "function") {
+    const runtimeKeys = getMonsterArtKeys(normalizedId)
+    if (Array.isArray(runtimeKeys) && runtimeKeys.length > 0) {
+      candidateKeys.unshift(...runtimeKeys)
+    }
+  }
+
+  const uniqueKeys = [...new Set(candidateKeys.filter(Boolean))]
+  for (const key of uniqueKeys) {
+    const src = String(ART_MANIFEST?.monsters?.[key] || "").trim()
+    if (src) {
+      return src
+    }
+  }
+
+  return ""
+}
+
+function buildStarterChoiceOptions() {
+  return STARTER_CHOICE_CONFIG.map((entry) => ({
+    label: entry.label,
+    description: entry.description,
+    imageSrc: getChoiceMonsterImageSrc(entry.speciesId),
+    imageAlt: `${entry.label} 预览`,
+    onSelect: () => recruitStarter(entry.speciesId),
+  }))
+}
+
+function createVNPlayerLine(text, extra = {}) {
+  return {
+    position: "right",
+    name: getVNPlayerDisplayName(),
+    portrait: "player",
+    text: String(text || "").trim(),
+    ...extra,
+  }
+}
+
+function playTrainerVNSequence(lines, onComplete = null) {
+  const sequence = Array.isArray(lines)
+    ? lines.filter((line) => line && typeof line === "object" && String(line.text || "").trim())
+    : []
+
+  if (sequence.length <= 0) {
+    if (typeof onComplete === "function") {
+      onComplete()
+    }
+    return
+  }
+
+  if (typeof showVNDialogue === "function") {
+    const options = typeof onComplete === "function" ? { onComplete } : {}
+    showVNDialogue(sequence, options)
+    return
+  }
+
+  for (const line of sequence) {
+    const speaker = String(line.name || "").trim()
+    const text = String(line.text || "").trim()
+    if (!text) {
+      continue
+    }
+    addDialogue(speaker ? `${speaker}: ${text}` : text)
+  }
+
+  if (typeof onComplete === "function") {
+    onComplete()
+  }
+}
+
 function interactDoctrineEnvoy() {
   if (!state.flags.goldenLegendCubCaptured) {
     addDialogue("同盟教众 辰铃: 先完成神兽幼体缔约，再来谈理念之争。")
@@ -2435,13 +2629,41 @@ function interactDoctrineEnvoy() {
     grantDoctrineMercySkill(cubMonster)
   }
   if (!state.flags.ideologyBattleWon) {
-    addDialogue("同盟教众 辰铃: 追猎者到了。用你刚觉醒的幼体，证明你的理念。")
-    state.player.activeIndex = Math.max(0, state.player.party.findIndex((monster) => monster?.uid === cubMonster.uid))
-    cubMonster.currentHp = Math.max(1, cubMonster.currentHp)
-    startTrainerBattle("ideology_hunter")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "意识形态猎手 赫恩",
+          portrait: "ideology_hunter",
+          text: "终于现身了。把你所谓的理念，放到战斗里给我看。",
+        },
+        createVNPlayerLine("理念不是口号，我会用战斗证明。"),
+        {
+          position: "left",
+          name: "意识形态猎手 赫恩",
+          portrait: "ideology_hunter",
+          text: "就用你那只刚觉醒的神兽幼体，来证明你自己。",
+        },
+      ],
+      () => {
+        state.player.activeIndex = Math.max(
+          0,
+          state.player.party.findIndex((monster) => monster?.uid === cubMonster.uid)
+        )
+        cubMonster.currentHp = Math.max(1, cubMonster.currentHp)
+        startTrainerBattle("ideology_hunter")
+      }
+    )
     return
   }
-  addDialogue("同盟教众 辰铃: 你已经赢下理念之争。下一次神兽机遇，去道馆里找答案。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "意识形态猎手 赫恩",
+      portrait: "ideology_hunter",
+      text: "这一次算你赢。去道馆里证明，你的理念在更高强度下也站得住。",
+    },
+  ])
 }
 
 function interactScout() {
@@ -2461,11 +2683,37 @@ function interactScout() {
   }
 
   if (!state.flags.scoutDefeated) {
-    startTrainerBattle("scout")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "蚀星先遣 洛克",
+          portrait: "scout",
+          text: "你能走到这里，说明前线封锁已经压不住你了。",
+        },
+        createVNPlayerLine("我不会停在这里，放马过来。"),
+        {
+          position: "left",
+          name: "蚀星先遣 洛克",
+          portrait: "scout",
+          text: "来吧，让我亲自确认你有没有继续前进的资格。",
+        },
+      ],
+      () => {
+        startTrainerBattle("scout")
+      }
+    )
     return
   }
 
-  addDialogue("蚀星先遣 洛克: 你居然赢了……但前面还有我们的执旗官。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "蚀星先遣 洛克",
+      portrait: "scout",
+      text: "这次是你赢了……但前面还有我们的执旗官。",
+    },
+  ])
 }
 
 function interactVanguard() {
@@ -2475,11 +2723,37 @@ function interactVanguard() {
   }
 
   if (!state.flags.vanguardDefeated) {
-    startTrainerBattle("vanguard")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "蚀星执旗 维萝",
+          portrait: "vanguard",
+          text: "先遣倒下，不代表你已经突破蚀星阵线。",
+        },
+        createVNPlayerLine("我会一路突破到终点，你拦不住。"),
+        {
+          position: "left",
+          name: "蚀星执旗 维萝",
+          portrait: "vanguard",
+          text: "让我亲自验证你的队伍节奏。",
+        },
+      ],
+      () => {
+        startTrainerBattle("vanguard")
+      }
+    )
     return
   }
 
-  addDialogue("蚀星执旗 维萝: 这次算你赢。去拿你的道馆通行证吧。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "蚀星执旗 维萝",
+      portrait: "vanguard",
+      text: "我认输。去拿你的道馆通行证吧。",
+    },
+  ])
 }
 
 function interactGymAide() {
@@ -2489,11 +2763,37 @@ function interactGymAide() {
   }
 
   if (!state.flags.gymAideDefeated) {
-    startTrainerBattle("gym_aide")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "试炼官 赛弥",
+          portrait: "gym_aide",
+          text: "馆主战前先热身一场，把你的节奏找回来。",
+        },
+        createVNPlayerLine("正合我意，先用你来检验状态。"),
+        {
+          position: "left",
+          name: "试炼官 赛弥",
+          portrait: "gym_aide",
+          text: "准备好了，我们就开战。",
+        },
+      ],
+      () => {
+        startTrainerBattle("gym_aide")
+      }
+    )
     return
   }
 
-  addDialogue("试炼官 赛弥: 热身很扎实，你现在可以直接挑战馆主阿斯特拉。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "试炼官 赛弥",
+      portrait: "gym_aide",
+      text: "热身很扎实，你现在可以直接挑战馆主阿斯特拉。",
+    },
+  ])
 }
 
 function interactLeader() {
@@ -2501,13 +2801,14 @@ function interactLeader() {
     if (typeof showVNDialogue === "function") {
       showVNDialogue([
         {
-          position: "right",
+          position: "left",
           name: "馆主 阿斯特拉",
           portrait: "leader",
           text: "没有教授的通行证，你还不能接受星辉道馆的试炼。",
         },
+        createVNPlayerLine("明白了，我会先完成教授的考验。"),
         {
-          position: "right",
+          position: "left",
           name: "馆主 阿斯特拉",
           portrait: "leader",
           text: "先去完成教授交代的考验，再来接受我的挑战。",
@@ -2515,6 +2816,7 @@ function interactLeader() {
       ])
     } else {
       addDialogue("馆主阿斯特拉: 没有教授的通行证，你还不能接受星辉道馆的试炼。")
+      addDialogue(`${getVNPlayerDisplayName()}: 明白了，我会先完成教授的考验。`)
     }
     return
   }
@@ -2525,13 +2827,14 @@ function interactLeader() {
         showVNDialogue(
           [
             {
-              position: "right",
+              position: "left",
               name: "馆主 阿斯特拉",
               portrait: "leader",
               text: "你终于来了。星辉道馆的试炼，是真正的意志检验。",
             },
+            createVNPlayerLine("我已经准备好挑战你了。"),
             {
-              position: "right",
+              position: "left",
               name: "馆主 阿斯特拉",
               portrait: "leader",
               text: "挑战之前，我可以给你一份对策补给。准备好了，再来见我。",
@@ -2568,6 +2871,9 @@ function interactLeader() {
           }
         )
       } else {
+        addDialogue("馆主阿斯特拉: 你终于来了。星辉道馆的试炼，是真正的意志检验。")
+        addDialogue(`${getVNPlayerDisplayName()}: 我已经准备好挑战你了。`)
+        addDialogue("馆主阿斯特拉: 挑战之前，我可以给你一份对策补给。准备好了，再来见我。")
         openChoice("馆主阿斯特拉 · 道馆试炼前整备", [
           {
             label: "领取对策补给后挑战",
@@ -2596,16 +2902,43 @@ function interactLeader() {
       }
       return
     }
-    startTrainerBattle("leader")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "馆主 阿斯特拉",
+          portrait: "leader",
+          text: "你已经整备完成了。现在开始正式道馆战。",
+        },
+        createVNPlayerLine("来吧，我会堂堂正正赢下这场试炼。"),
+      ],
+      () => {
+        startTrainerBattle("leader")
+      }
+    )
     return
   }
 
   if (state.flags.firstGymRewardPending) {
-    addDialogue("馆主阿斯特拉: 你已通过首个试炼。先回城找教授领取你的定制奖励吧。")
+    playTrainerVNSequence([
+      {
+        position: "left",
+        name: "馆主 阿斯特拉",
+        portrait: "leader",
+        text: "你已通过首个试炼。先回城找教授领取你的定制奖励吧。",
+      },
+    ])
     return
   }
 
-  addDialogue("馆主阿斯特拉: 继续扩充你的图鉴吧。更辽阔的地区在等你。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "馆主 阿斯特拉",
+      portrait: "leader",
+      text: "继续扩充你的图鉴吧。更辽阔的地区在等你。",
+    },
+  ])
 }
 
 function interactMerchant() {
@@ -3753,10 +4086,36 @@ function interactBreeder() {
     return
   }
   if (!state.flags.breederDefeated) {
-    startTrainerBattle("breeder")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "育成师 玛芙",
+          portrait: "breeder",
+          text: "果园试炼看的是属性轮换与资源管理。",
+        },
+        createVNPlayerLine("我会把每一步轮换都打到位。"),
+        {
+          position: "left",
+          name: "育成师 玛芙",
+          portrait: "breeder",
+          text: "准备好就开始吧。",
+        },
+      ],
+      () => {
+        startTrainerBattle("breeder")
+      }
+    )
     return
   }
-  addDialogue("果园育成师 玛芙: 你已经能在双属性配队里保持节奏了，去海湾继续提升吧。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "育成师 玛芙",
+      portrait: "breeder",
+      text: "不错，你的双属性节奏已经成型。去海湾继续提升吧。",
+    },
+  ])
 }
 
 function interactCaptain() {
@@ -3765,10 +4124,36 @@ function interactCaptain() {
     return
   }
   if (!state.flags.captainDefeated) {
-    startTrainerBattle("captain")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "海湾队长 赛伦",
+          portrait: "captain",
+          text: "海湾实战不只拼输出，还要看抗性与换宠时机。",
+        },
+        createVNPlayerLine("我会用节奏和换宠把你压住。"),
+        {
+          position: "left",
+          name: "海湾队长 赛伦",
+          portrait: "captain",
+          text: "让我看看你能不能控住整场潮汐节奏。",
+        },
+      ],
+      () => {
+        startTrainerBattle("captain")
+      }
+    )
     return
   }
-  addDialogue("海湾队长 赛伦: 不错，接下来去流星高岭，那里更考验换宠与抗性。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "海湾队长 赛伦",
+      portrait: "captain",
+      text: "很好。去流星高岭吧，那里更考验换宠与抗性。",
+    },
+  ])
 }
 
 function interactAce() {
@@ -3777,10 +4162,36 @@ function interactAce() {
     return
   }
   if (!state.flags.aceDefeated) {
-    startTrainerBattle("ace")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "高岭王牌 维迦",
+          portrait: "ace",
+          text: "高岭之战节奏极快，失误一次就会被放大。",
+        },
+        createVNPlayerLine("越是高压对局，我越不会乱节奏。"),
+        {
+          position: "left",
+          name: "高岭王牌 维迦",
+          portrait: "ace",
+          text: "来，证明你配得上王牌名号。",
+        },
+      ],
+      () => {
+        startTrainerBattle("ace")
+      }
+    )
     return
   }
-  addDialogue("高岭王牌 维迦: 你已经具备群岛级别的对战调度能力，去找守望者伊诺。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "高岭王牌 维迦",
+      portrait: "ace",
+      text: "你通过了高岭考核。去找守望者伊诺。",
+    },
+  ])
 }
 
 function interactWarden() {
@@ -3789,10 +4200,36 @@ function interactWarden() {
     return
   }
   if (!state.flags.wardenDefeated) {
-    startTrainerBattle("warden")
+    playTrainerVNSequence(
+      [
+        {
+          position: "left",
+          name: "守望者 伊诺",
+          portrait: "warden",
+          text: "群岛守望不是终点，而是遗迹门前的最终筛选。",
+        },
+        createVNPlayerLine("我就是为通过最终筛选而来的。"),
+        {
+          position: "left",
+          name: "守望者 伊诺",
+          portrait: "warden",
+          text: "让我确认你是否具备进入遗迹的资格。",
+        },
+      ],
+      () => {
+        startTrainerBattle("warden")
+      }
+    )
     return
   }
-  addDialogue("群岛守望者 伊诺: 传送潮门已对你开放。你可直达遗迹或继续扩充图鉴。")
+  playTrainerVNSequence([
+    {
+      position: "left",
+      name: "守望者 伊诺",
+      portrait: "warden",
+      text: "潮门权限已授予。你可直达遗迹，也可继续扩充图鉴。",
+    },
+  ])
 }
 
 function sanitizePlayerName(input) {
@@ -3904,6 +4341,16 @@ const GOLDEN_PROLOGUE_CINEMATIC_TIMELINE = Object.freeze([
   },
 ])
 
+const GOLDEN_PROLOGUE_BACKDROP_SEQUENCE = Object.freeze([
+  "assets/cutscenes/opening/frame_01_standoff.jpg",
+  "assets/cutscenes/opening/frame_02_first_clash.jpg",
+  "assets/cutscenes/opening/frame_03_energy_clash.jpg",
+  "assets/cutscenes/opening/frame_04_devour_suppression.jpg",
+  "assets/cutscenes/opening/frame_05_fusion_counterattack.jpg",
+  "assets/cutscenes/opening/frame_06_white_convergence.jpg",
+  "assets/cutscenes/opening/frame_06_white_convergence.jpg",
+])
+
 function sanitizeGoldenPath(path) {
   return path === "fusion" || path === "devour" ? path : ""
 }
@@ -3944,6 +4391,14 @@ function getGoldenMirrorIdentityImageSrc() {
     return goldenMirrorIdentityImageCache
   }
 
+  // 优先使用真实插画资产
+  const realSrc = typeof ART_MANIFEST !== "undefined" && ART_MANIFEST?.ui?.ui_identity_register_keyart_v1
+  if (realSrc) {
+    goldenMirrorIdentityImageCache = realSrc
+    return goldenMirrorIdentityImageCache
+  }
+
+  // Fallback: SVG 占位图
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 900">
     <defs>
       <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
@@ -4027,6 +4482,7 @@ function setGoldenCinematicOverlayVisible(visible, frame = {}, mode = "fusion") 
     const hint = String(frame?.hint || "序章演出中").trim()
     const focus = String(frame?.focus || "split").trim()
     const stateKey = String(frame?.state || "opening").trim()
+    const backdropImageSrc = String(frame?.backdropImageSrc || "").trim()
     const leftImageSrc = String(frame?.leftImageSrc || "").trim() || getGoldenCinematicMonsterSrc(frame?.leftKeys)
     const rightImageSrc = String(frame?.rightImageSrc || "").trim() || getGoldenCinematicMonsterSrc(frame?.rightKeys)
 
@@ -4044,6 +4500,18 @@ function setGoldenCinematicOverlayVisible(visible, frame = {}, mode = "fusion") 
     if (ui.prologueCinematicHint) {
       ui.prologueCinematicHint.textContent = hint
     }
+    if (ui.prologueCinematicBackdrop) {
+      if (backdropImageSrc) {
+        ui.prologueCinematicBackdrop.style.setProperty(
+          "--prologue-backdrop-image",
+          `url("${backdropImageSrc}")`
+        )
+        ui.prologueCinematicBackdrop.classList.add("has-image")
+      } else {
+        ui.prologueCinematicBackdrop.style.removeProperty("--prologue-backdrop-image")
+        ui.prologueCinematicBackdrop.classList.remove("has-image")
+      }
+    }
     setGoldenCinematicPortrait(ui.prologueCinematicLeft, leftImageSrc)
     setGoldenCinematicPortrait(ui.prologueCinematicRight, rightImageSrc)
     return
@@ -4053,6 +4521,10 @@ function setGoldenCinematicOverlayVisible(visible, frame = {}, mode = "fusion") 
   delete ui.prologueCinematicOverlay.dataset.mode
   delete ui.prologueCinematicOverlay.dataset.focus
   delete ui.prologueCinematicOverlay.dataset.state
+  if (ui.prologueCinematicBackdrop) {
+    ui.prologueCinematicBackdrop.style.removeProperty("--prologue-backdrop-image")
+    ui.prologueCinematicBackdrop.classList.remove("has-image")
+  }
   setGoldenCinematicPortrait(ui.prologueCinematicLeft, "")
   setGoldenCinematicPortrait(ui.prologueCinematicRight, "")
 }
@@ -4085,7 +4557,8 @@ async function playGoldenCinematicFrames(frames, mode = "fusion") {
   window.addEventListener("keydown", skipOnEsc)
 
   setGoldenCinematicOverlayVisible(true, normalizedFrames[0], mode)
-  for (const frame of normalizedFrames) {
+  for (let index = 0; index < normalizedFrames.length; index += 1) {
+    const frame = normalizedFrames[index]
     if (_cinematicSkipRequested) break
     setGoldenCinematicOverlayVisible(true, frame, mode)
     // 被跳过时不等待
@@ -4101,9 +4574,24 @@ async function playGoldenCinematicFrames(frames, mode = "fusion") {
   setGoldenCinematicOverlayVisible(false)
 }
 
+function attachGoldenPrologueBackdropFrames(frames) {
+  const normalizedFrames = Array.isArray(frames) ? frames : []
+  return normalizedFrames.map((frame, index) => {
+    const fallbackBackdrop =
+      GOLDEN_PROLOGUE_BACKDROP_SEQUENCE[index] ||
+      GOLDEN_PROLOGUE_BACKDROP_SEQUENCE[GOLDEN_PROLOGUE_BACKDROP_SEQUENCE.length - 1] ||
+      ""
+    return {
+      ...frame,
+      backdropImageSrc: String(frame?.backdropImageSrc || "").trim() || fallbackBackdrop,
+    }
+  })
+}
+
 async function playGoldenPrologueCinematic() {
   addDialogue("系统: 序章开始。两大神兽的神性战争正在你眼前重演。")
-  await playGoldenCinematicFrames(GOLDEN_PROLOGUE_CINEMATIC_TIMELINE, "fusion")
+  const frames = attachGoldenPrologueBackdropFrames(GOLDEN_PROLOGUE_CINEMATIC_TIMELINE)
+  await playGoldenCinematicFrames(frames, "fusion")
   addDialogue("系统: 序章结束。你即将决定自己的进化流派。")
 }
 

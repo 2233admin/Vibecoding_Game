@@ -7,9 +7,19 @@ const generatedAssets = window.GBIT_ASSETS_GENERATED || {
 
 const manualAssets = {
   scene: {
-    // town: "assets/scene/town.png",
-    // route: "assets/scene/route.png",
-    // gym: "assets/scene/gym.png",
+    town: "assets/scene/town.jpg",
+    home: "assets/scene/home.jpg",
+    route: "assets/scene/route.jpg",
+    meadow: "assets/scene/meadow.jpg",
+    lake: "assets/scene/lake.jpg",
+    orchard: "assets/scene/orchard.jpg",
+    reef: "assets/scene/reef.jpg",
+    cave: "assets/scene/cave.jpg",
+    deep_cave: "assets/scene/deep_cave.jpg",
+    ridge: "assets/scene/ridge.jpg",
+    islet: "assets/scene/islet.jpg",
+    sanctum: "assets/scene/sanctum.jpg",
+    gym: "assets/scene/gym.jpg",
   },
   tiles: {
     // town_ground: "assets/tiles/town-ground.png",
@@ -24,6 +34,15 @@ const manualAssets = {
     // exit_right: "assets/tiles/exit-right.png",
     // exit_left: "assets/tiles/exit-left.png",
     // exit_down: "assets/tiles/exit-down.png",
+  },
+  ui: {
+    // 镜前登记主视觉插画
+    ui_identity_register_keyart_v1: "assets/ui/identity/ui_identity_register_keyart_v1.jpg",
+    // 全局地图面板
+    "world-map-bg":        "assets/ui/map/world-map-bg.jpg",
+    "map-pin-unlocked":    "assets/ui/map/map-pin-unlocked.png",
+    "map-pin-locked":      "assets/ui/map/map-pin-locked.png",
+    "map-panel-frame":     "assets/ui/map/map-panel-frame.png",
   },
   characters: {
     // player: "assets/characters/player/player.png",
@@ -108,5 +127,8 @@ window.GBIT_ASSETS = {
   monsters: {
     ...(generatedAssets.monsters || {}),
     ...(manualAssets.monsters || {}),
+  },
+  ui: {
+    ...(manualAssets.ui || {}),
   },
 }

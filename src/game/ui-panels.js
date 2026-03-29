@@ -1790,12 +1790,17 @@ function renderChoice() {
   ui.choiceTitle.textContent = state.choice.title
   ui.choiceOptions.innerHTML = ""
   ui.choiceOptions.dataset.count = String(state.choice.options.length)
+  const explicitTheme = String(state.choice.theme || "").trim()
   const choiceTitle = String(state.choice.title || "")
-  ui.choiceOverlay.dataset.theme = choiceTitle.includes("镜前")
-    ? "mirror"
-    : choiceTitle.includes("试炼")
-      ? "trial"
-      : "default"
+  ui.choiceOverlay.dataset.theme =
+    explicitTheme ||
+    (choiceTitle.includes("镜前")
+      ? "mirror"
+      : choiceTitle.includes("初始伙伴")
+        ? "starter"
+        : choiceTitle.includes("试炼")
+          ? "trial"
+          : "default")
 
   for (const option of state.choice.options) {
     const wrapper = document.createElement("article")
@@ -1905,8 +1910,9 @@ function renderChoice() {
   }
 }
 
-function openChoice(title, options) {
-  state.choice = { title, options }
+function openChoice(title, options, config = {}) {
+  const theme = String(config?.theme || "").trim()
+  state.choice = { title, options, theme }
   syncUi()
 }
 

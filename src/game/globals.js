@@ -21,6 +21,223 @@ const artState = {
   images: {},
 }
 
+const sceneCollisionState = {
+  loaded: false,
+  loading: false,
+  error: null,
+  maps: {},
+}
+
+function toSceneCellKey(x, y) {
+  return `${x}:${y}`
+}
+
+function normalizeGridInt(value, fallback = 0) {
+  const parsed = Number.parseInt(value, 10)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function normalizeTransitionDirection(value) {
+  const normalized = String(value || "").trim().toLowerCase()
+  if (normalized === "up" || normalized === "down" || normalized === "left" || normalized === "right") {
+    return normalized
+  }
+  return ""
+}
+
+function clampGridX(value) {
+  return Math.max(0, Math.min(MAP_WIDTH - 1, normalizeGridInt(value, 0)))
+}
+
+function clampGridY(value) {
+  return Math.max(0, Math.min(MAP_HEIGHT - 1, normalizeGridInt(value, 0)))
+}
+
+function collectSceneCells(cells, rects) {
+  const output = new Set()
+
+  if (Array.isArray(cells)) {
+    for (const cell of cells) {
+      if (!cell || typeof cell !== "object") {
+        continue
+      }
+      const x = clampGridX(cell.x)
+      const y = clampGridY(cell.y)
+      output.add(toSceneCellKey(x, y))
+    }
+  }
+
+  if (Array.isArray(rects)) {
+    for (const rect of rects) {
+      if (!rect || typeof rect !== "object") {
+        continue
+      }
+      const startX = clampGridX(rect.x)
+      const startY = clampGridY(rect.y)
+      const width = Math.max(1, normalizeGridInt(rect.w ?? rect.width, 1))
+      const height = Math.max(1, normalizeGridInt(rect.h ?? rect.height, 1))
+      const endX = Math.min(MAP_WIDTH - 1, startX + width - 1)
+      const endY = Math.min(MAP_HEIGHT - 1, startY + height - 1)
+      for (let y = startY; y <= endY; y += 1) {
+        for (let x = startX; x <= endX; x += 1) {
+          output.add(toSceneCellKey(x, y))
+        }
+      }
+    }
+  }
+
+  return output
+}
+
+function normalizeSceneTransition(transition, index) {
+  if (!transition || typeof transition !== "object") {
+    return null
+  }
+
+  const sourceX = transition.x ?? transition.from?.x
+  const sourceY = transition.y ?? transition.from?.y
+  const toMap = String(transition.to?.map ?? transition.toMap ?? transition.targetScene ?? "").trim()
+  const toX = normalizeGridInt(transition.to?.x ?? transition.toX, 0)
+  const toY = normalizeGridInt(transition.to?.y ?? transition.toY, 0)
+  const direction = normalizeTransitionDirection(transition.direction)
+  const label = String(transition.label ?? transition.targetLabel ?? "").trim()
+
+  if (!toMap) {
+    return null
+  }
+
+  return {
+    id: String(transition.id || `scene_transition_${index + 1}`),
+    x: clampGridX(sourceX),
+    y: clampGridY(sourceY),
+    direction,
+    label,
+    toMap,
+    toX: clampGridX(toX),
+    toY: clampGridY(toY),
+    message: String(transition.message || ""),
+    denyMessage: String(transition.denyMessage || ""),
+    requires: transition.requires && typeof transition.requires === "object" ? transition.requires : null,
+    postAction: String(transition.postAction || ""),
+    onSuccess:
+      transition.onSuccess && typeof transition.onSuccess === "object"
+        ? {
+            healParty: Boolean(transition.onSuccess.healParty),
+            healReserve: Boolean(transition.onSuccess.healReserve),
+          }
+        : null,
+  }
+}
+
+function buildSceneCollisionRuntimeMap(mapId, mapConfig) {
+  if (!mapConfig || typeof mapConfig !== "object") {
+    return null
+  }
+
+  const walkable = collectSceneCells(mapConfig.walkableCells, mapConfig.walkableRects)
+  const blocked = collectSceneCells(mapConfig.blockedCells, mapConfig.blockedRects)
+  const transitionByCell = Object.create(null)
+  const transitions = []
+
+  if (Array.isArray(mapConfig.transitions)) {
+    for (let i = 0; i < mapConfig.transitions.length; i += 1) {
+      const normalized = normalizeSceneTransition(mapConfig.transitions[i], i)
+      if (!normalized) {
+        continue
+      }
+      transitions.push(normalized)
+      transitionByCell[toSceneCellKey(normalized.x, normalized.y)] = normalized
+    }
+  }
+
+  return {
+    mapId,
+    enabled: mapConfig.enabled !== false,
+    walkable: walkable.size > 0 ? walkable : null,
+    blocked,
+    transitions,
+    transitionByCell,
+  }
+}
+
+function applySceneCollisionConfig(raw) {
+  const mapsConfig = raw && typeof raw === "object" && raw.maps && typeof raw.maps === "object"
+    ? raw.maps
+    : {}
+  const nextMaps = {}
+
+  for (const [mapId, mapConfig] of Object.entries(mapsConfig)) {
+    const runtimeMap = buildSceneCollisionRuntimeMap(mapId, mapConfig)
+    if (runtimeMap?.enabled) {
+      nextMaps[mapId] = runtimeMap
+    }
+  }
+
+  sceneCollisionState.maps = nextMaps
+}
+
+async function loadSceneCollisionConfig() {
+  if (sceneCollisionState.loaded || sceneCollisionState.loading) {
+    return
+  }
+
+  sceneCollisionState.loading = true
+  sceneCollisionState.error = null
+
+  try {
+    const versionSuffix = window.GBIT_VERSION?.version ? `?v=${encodeURIComponent(window.GBIT_VERSION.version)}` : ""
+    const response = await fetch(`scene-collision.json${versionSuffix}`, { cache: "no-store" })
+    if (!response.ok) {
+      throw new Error(`scene-collision.json HTTP ${response.status}`)
+    }
+    const raw = await response.json()
+    applySceneCollisionConfig(raw)
+  } catch (error) {
+    sceneCollisionState.error = error?.message || "failed to load scene-collision.json"
+    sceneCollisionState.maps = {}
+    console.warn("[scene-collision]", sceneCollisionState.error)
+  } finally {
+    sceneCollisionState.loaded = true
+    sceneCollisionState.loading = false
+  }
+}
+
+function getSceneCollisionMap(mapId = state?.currentMap) {
+  const key = String(mapId || "").trim()
+  if (!key) {
+    return null
+  }
+  return sceneCollisionState.maps[key] || null
+}
+
+function getSceneCollisionPassability(mapId, x, y) {
+  const runtimeMap = getSceneCollisionMap(mapId)
+  if (!runtimeMap) {
+    return null
+  }
+
+  if (x < 0 || y < 0 || x >= MAP_WIDTH || y >= MAP_HEIGHT) {
+    return false
+  }
+
+  const key = toSceneCellKey(x, y)
+  if (runtimeMap.blocked.has(key)) {
+    return false
+  }
+  if (runtimeMap.walkable) {
+    return runtimeMap.walkable.has(key)
+  }
+  return true
+}
+
+function getSceneCollisionTransition(mapId, x, y) {
+  const runtimeMap = getSceneCollisionMap(mapId)
+  if (!runtimeMap) {
+    return null
+  }
+  return runtimeMap.transitionByCell[toSceneCellKey(x, y)] || null
+}
+
 const sceneThemes = {
   home: {
     backdropTop: "#9cc8ff",

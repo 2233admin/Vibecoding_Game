@@ -5,6 +5,7 @@
   }
   drawMap(time)
   drawAmbientEffects(time)
+  drawSceneExitGuides(time)
   drawNpcSprites(time)
   drawPlayerSprite(time)
   drawSceneFinish(time)
@@ -26,10 +27,139 @@ const MARKER_TILES = new Set([
   "c",
 ])
 
+const EXIT_ARROW_GLYPH_BY_DIRECTION = Object.freeze({
+  up: "▲",
+  down: "▼",
+  left: "◀",
+  right: "▶",
+})
+
+function drawSceneExitGuides(time) {
+  if (typeof getSceneCollisionMap !== "function") {
+    return
+  }
+
+  const runtimeMap = getSceneCollisionMap(state.currentMap)
+  if (!runtimeMap || !Array.isArray(runtimeMap.transitions) || runtimeMap.transitions.length <= 0) {
+    return
+  }
+
+  const phase = ((Number.isFinite(time) ? time : Date.now()) * Math.PI * 2) / 1200
+
+  for (const transition of runtimeMap.transitions) {
+    const direction = String(transition?.direction || "").trim().toLowerCase()
+    if (!EXIT_ARROW_GLYPH_BY_DIRECTION[direction]) {
+      continue
+    }
+
+    const tx = Number(transition?.x)
+    const ty = Number(transition?.y)
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) {
+      continue
+    }
+
+    const distance = Math.abs(tx - state.player.x) + Math.abs(ty - state.player.y)
+    const nearby = distance <= 4
+    const pulse = (Math.sin(phase + tx * 0.7 + ty * 0.41) + 1) / 2
+    const bob = Math.sin(phase + tx * 0.43 + ty * 0.31) * 4
+    const centerX = tx * TILE_SIZE + TILE_SIZE / 2
+    const centerY = ty * TILE_SIZE + TILE_SIZE / 2 + bob
+    const boxSize = nearby ? 30 + pulse * 2 : 21 + pulse * 1.5
+    const radius = nearby ? 9 : 7
+
+    ctx.save()
+
+    if (nearby) {
+      ctx.fillStyle = `rgba(255, 221, 138, ${0.18 + pulse * 0.16})`
+      ctx.beginPath()
+      ctx.ellipse(centerX, centerY + 1, boxSize * 0.84, boxSize * 0.48, 0, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    ctx.fillStyle = nearby ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.52)"
+    ctx.strokeStyle = nearby ? "rgba(42,50,66,0.84)" : "rgba(42,50,66,0.42)"
+    ctx.lineWidth = nearby ? 2 : 1.3
+    ctx.beginPath()
+    ctx.roundRect(centerX - boxSize / 2, centerY - boxSize / 2, boxSize, boxSize, radius)
+    ctx.fill()
+    ctx.stroke()
+
+    ctx.fillStyle = nearby ? "#223047" : "rgba(35,48,71,0.76)"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.font = nearby
+      ? "800 16px 'Inter', 'Microsoft YaHei', sans-serif"
+      : "800 13px 'Inter', 'Microsoft YaHei', sans-serif"
+    ctx.fillText(EXIT_ARROW_GLYPH_BY_DIRECTION[direction], centerX, centerY + 0.5)
+
+    if (nearby) {
+      const rawLabel =
+        String(transition.label || "").trim() ||
+        String(maps?.[transition.toMap]?.name || transition.toMap || "").trim()
+      const label = fitSingleLineText(rawLabel, 180) || rawLabel || "出口"
+      ctx.font = "700 14px 'Inter', 'Microsoft YaHei', sans-serif"
+      const labelWidth = Math.max(86, Math.min(220, Math.ceil(ctx.measureText(label).width) + 24))
+      const bubbleHeight = 30
+      const bx = clamp(centerX - labelWidth / 2, 12, ui.canvas.width - labelWidth - 12)
+      const by = centerY - boxSize / 2 - 38
+
+      ctx.fillStyle = "rgba(255,255,255,0.97)"
+      ctx.strokeStyle = "rgba(42,50,66,0.78)"
+      ctx.lineWidth = 1.6
+      ctx.beginPath()
+      ctx.roundRect(bx, by, labelWidth, bubbleHeight, 9)
+      ctx.fill()
+      ctx.stroke()
+
+      ctx.fillStyle = "#233047"
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      ctx.fillText(label, bx + labelWidth / 2, by + bubbleHeight / 2 + 0.5)
+    }
+
+    ctx.restore()
+  }
+}
+
+function hasSceneBackdropAsset(mapId = state.currentMap) {
+  const src = ART_MANIFEST?.scene?.[mapId]
+  return typeof src === "string" && src.trim().length > 0
+}
+
+function hasTileArtAsset(mapId = state.currentMap) {
+  return Boolean(
+    ART_MANIFEST?.tiles?.[`${mapId}_ground`] ||
+      ART_MANIFEST?.tiles?.[`${mapId}_wall`] ||
+      ART_MANIFEST?.tiles?.ground ||
+      ART_MANIFEST?.tiles?.wall
+  )
+}
+
+function shouldRenderLegacyTileVisualLayer(mapId = state.currentMap) {
+  // Scene art mode: if a full map scene image exists (and no dedicated tile pack),
+  // skip legacy procedural tile visuals to avoid double-render mismatch.
+  if (hasSceneBackdropAsset(mapId) && !hasTileArtAsset(mapId)) {
+    return false
+  }
+  return true
+}
+
+function shouldUseLegacyTileCollision(mapId = state.currentMap) {
+  if (typeof getSceneCollisionMap === "function" && getSceneCollisionMap(mapId)) {
+    return false
+  }
+  return true
+}
+
 
 function drawMap(time) {
   ctx.clearRect(0, 0, ui.canvas.width, ui.canvas.height)
   drawSceneBackdrop(time)
+
+  const renderLegacyTiles = shouldRenderLegacyTileVisualLayer(state.currentMap)
+  if (!renderLegacyTiles) {
+    return
+  }
 
   const tiles = maps[state.currentMap].tiles
   for (let y = 0; y < MAP_HEIGHT; y += 1) {
@@ -1175,6 +1305,16 @@ function isNpcBlocking(mapId, x, y) {
 function isPassable(mapId, x, y) {
   if (x < 0 || y < 0 || x >= MAP_WIDTH || y >= MAP_HEIGHT) {
     return false
+  }
+
+  if (!shouldUseLegacyTileCollision(mapId)) {
+    if (typeof getSceneCollisionPassability === "function") {
+      const scenePassable = getSceneCollisionPassability(mapId, x, y)
+      if (typeof scenePassable === "boolean") {
+        return scenePassable
+      }
+    }
+    return true
   }
 
   return getTile(mapId, x, y) !== "#"

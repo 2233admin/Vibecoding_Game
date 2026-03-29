@@ -1,12 +1,12 @@
-// VN Dialogue Engine — 明日方舟风格双立绘视觉小说对话系统
-// 纯 DOM overlay，不改 Canvas 渲染，不引入外部依赖
+﻿// VN Dialogue Engine 鈥?鏄庢棩鏂硅垷椋庢牸鍙岀珛缁樿瑙夊皬璇村璇濈郴缁?
+// 绾?DOM overlay锛屼笉鏀?Canvas 娓叉煋锛屼笉寮曞叆澶栭儴渚濊禆
 
 ;(function () {
-  // ─── 常量 ────────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 甯搁噺 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   const TYPEWRITER_INTERVAL_MS = 40
   const VN_LAYER_ID = "vn-dialogue-layer"
 
-  // ─── 运行时状态 ──────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 杩愯鏃剁姸鎬?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   let _script = []
   let _cursor = 0
   let _typewriterTimer = null
@@ -14,8 +14,10 @@
   let _fullText = ""
   let _typing = false
   let _onComplete = null
+  let _activeSide = null
+  let _focusShiftTimer = null
 
-  // ─── DOM 引用（延迟初始化）────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ DOM 寮曠敤锛堝欢杩熷垵濮嬪寲锛夆攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   let _layer = null
   let _leftSlot = null
   let _rightSlot = null
@@ -24,7 +26,7 @@
   let _hintEl = null
   let _choicesEl = null
 
-  // ─── DOM 构建 ────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ DOM 鏋勫缓 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   function _buildDOM() {
     if (_layer) return
 
@@ -47,12 +49,12 @@
           <span class="vn-name-text"></span>
         </div>
         <p class="vn-text-line"></p>
-        <span class="vn-next-hint hidden">▼</span>
+        <span class="vn-next-hint hidden">鈻?/span>
         <div class="vn-choices hidden"></div>
       </div>
     `
 
-    // 注入到 canvas-frame 内（和其他 overlay 同级）
+    // 娉ㄥ叆鍒?canvas-frame 鍐咃紙鍜屽叾浠?overlay 鍚岀骇锛?
     const canvasFrame = document.querySelector(".canvas-frame")
     if (canvasFrame) {
       canvasFrame.appendChild(_layer)
@@ -67,33 +69,71 @@
     _hintEl = _layer.querySelector(".vn-next-hint")
     _choicesEl = _layer.querySelector(".vn-choices")
 
-    // 点击对话框：跳过打字机 / 翻页
+    // 鐐瑰嚮瀵硅瘽妗嗭細璺宠繃鎵撳瓧鏈?/ 缈婚〉
     _layer.querySelector(".vn-dialogue-box").addEventListener("click", _onDialogueClick)
   }
 
-  // ─── 立绘加载 ────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 绔嬬粯鍔犺浇 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  function _collectPortraitLookupKeys(portraitId) {
+    const id = String(portraitId || "").trim()
+    if (!id) {
+      return []
+    }
+
+    const keys = []
+    if (id === "player") {
+      const activeKey =
+        typeof state !== "undefined"
+          ? String(state?.playerPortrait?.activeKey || state?.playerProfile?.portraitKey || "").trim()
+          : ""
+      if (activeKey) {
+        keys.push(activeKey)
+      }
+      keys.push("player")
+    } else {
+      keys.push(`npc_${id}`)
+      keys.push(id)
+    }
+
+    return [...new Set(keys.filter(Boolean))]
+  }
+
   function _getPortraitSrc(portraitId) {
     if (!portraitId) return null
 
-    // 优先从 artState.images（AI 生成立绘）查找
+    if (String(portraitId).trim() === "player") {
+      const activeSrc =
+        typeof state !== "undefined" ? String(state?.playerPortrait?.activeSrc || "").trim() : ""
+      if (activeSrc) {
+        return { type: "img", src: activeSrc }
+      }
+    }
+
+    const keys = _collectPortraitLookupKeys(portraitId)
+
+    // 优先从 artState.images（运行时立绘）查找
     if (typeof artState !== "undefined" && artState.images) {
-      const keys = [`npc_${portraitId}`, portraitId]
-      for (const k of keys) {
-        const src = artState.images[k]
-        if (src && typeof src === "string" && src.startsWith("data:")) {
-          return { type: "img", src }
+      for (const key of keys) {
+        const image = artState.images[`characters:${key}`]
+        if (typeof image === "string" && image.trim()) {
+          return { type: "img", src: image.trim() }
+        }
+        if (image?.src) {
+          return { type: "img", src: image.src }
         }
       }
     }
 
     // 尝试 ART_MANIFEST（assets.generated.js）
     if (typeof ART_MANIFEST !== "undefined" && ART_MANIFEST) {
-      const keys = [`npc_${portraitId}`, portraitId]
-      for (const k of keys) {
-        const entry = ART_MANIFEST[k]
-        if (entry) {
-          const src = typeof entry === "string" ? entry : entry.src || entry.url
-          if (src) return { type: "img", src }
+      for (const key of keys) {
+        const entry = ART_MANIFEST?.characters?.[key]
+        if (!entry) {
+          continue
+        }
+        const src = typeof entry === "string" ? entry : entry.src || entry.url
+        if (src) {
+          return { type: "img", src }
         }
       }
     }
@@ -102,7 +142,12 @@
   }
 
   function _getPortraitFallbackLabel(portraitId) {
-    // 从 npcDefinitions 取 symbol + color
+    if (String(portraitId || "").trim() === "player") {
+      const playerName = typeof state !== "undefined" ? String(state?.playerName || "").trim() : ""
+      return { symbol: playerName ? playerName.charAt(0) : "你", color: "#5aa8d8" }
+    }
+
+    // 浠?npcDefinitions 鍙?symbol + color
     if (typeof npcDefinitions !== "undefined" && Array.isArray(npcDefinitions)) {
       const npc = npcDefinitions.find((n) => n.id === portraitId)
       if (npc) return { symbol: npc.symbol || npc.name?.[0] || "?", color: npc.color || "#aaa" }
@@ -124,12 +169,16 @@
       const img = document.createElement("img")
       img.src = result.src
       img.className = "vn-portrait-img"
+      const normalizedSrc = String(result.src || "").toLowerCase().split("?")[0]
+      const isPng =
+        normalizedSrc.endsWith(".png") || normalizedSrc.startsWith("data:image/png")
+      img.classList.add(isPng ? "vn-portrait-alpha" : "vn-portrait-opaque")
       img.alt = portraitId
       slot.appendChild(img)
       return
     }
 
-    // fallback：色块 + 文字占位
+    // fallback锛氳壊鍧?+ 鏂囧瓧鍗犱綅
     const fb = _getPortraitFallbackLabel(portraitId)
     const div = document.createElement("div")
     div.className = "vn-portrait-fallback"
@@ -138,15 +187,25 @@
     slot.appendChild(div)
   }
 
-  // ─── 说话方高亮切换 ──────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 璇磋瘽鏂归珮浜垏鎹?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   function _setActiveSide(side) {
+    if (_activeSide && _activeSide !== side) {
+      _layer.classList.add("vn-focus-shift")
+      clearTimeout(_focusShiftTimer)
+      _focusShiftTimer = setTimeout(() => {
+        if (_layer) {
+          _layer.classList.remove("vn-focus-shift")
+        }
+      }, 200)
+    }
+    _activeSide = side
     _layer.querySelector(".vn-char-left").classList.toggle("vn-active", side === "left")
     _layer.querySelector(".vn-char-right").classList.toggle("vn-active", side === "right")
     _layer.querySelector(".vn-char-left").classList.toggle("vn-silent", side === "right")
     _layer.querySelector(".vn-char-right").classList.toggle("vn-silent", side === "left")
   }
 
-  // ─── 打字机 ──────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 鎵撳瓧鏈?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   function _startTypewriter(text) {
     _fullText = text
     _charIndex = 0
@@ -192,7 +251,7 @@
     }
   }
 
-  // ─── 选项分支 ────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 閫夐」鍒嗘敮 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   function _showChoices(choices) {
     _hintEl.classList.add("hidden")
     _choicesEl.innerHTML = ""
@@ -206,7 +265,7 @@
         _choicesEl.classList.add("hidden")
         _choicesEl.innerHTML = ""
         if (choice.branch && choice.branch.length > 0) {
-          // 插入分支脚本到当前位置之后
+          // 鎻掑叆鍒嗘敮鑴氭湰鍒板綋鍓嶄綅缃箣鍚?
           const before = _script.slice(0, _cursor + 1)
           const after = _script.slice(_cursor + 1)
           _script = [...before, ...choice.branch, ...after]
@@ -217,26 +276,26 @@
     })
   }
 
-  // ─── 逐行推进 ────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 閫愯鎺ㄨ繘 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   function _playLine(line) {
-    // 更新立绘
+    // 鏇存柊绔嬬粯
     if (line.portrait !== undefined) {
       const slot = line.position === "right" ? _rightSlot : _leftSlot
       _renderPortrait(slot, line.portrait)
     }
 
-    // 高亮说话方
+    // 楂樹寒璇磋瘽鏂?
     _setActiveSide(line.position || "left")
 
-    // 更新角色名
+    // 鏇存柊瑙掕壊鍚?
     _nameEl.textContent = line.name || ""
 
-    // 清空选项
+    // 娓呯┖閫夐」
     _choicesEl.classList.add("hidden")
     _choicesEl.innerHTML = ""
     _hintEl.classList.add("hidden")
 
-    // 打字机
+    // 鎵撳瓧鏈?
     _startTypewriter(line.text || "")
   }
 
@@ -254,12 +313,12 @@
       _skipTypewriter()
       return
     }
-    // 如果选项正在显示，点击无效（让用户点按钮）
+    // 濡傛灉閫夐」姝ｅ湪鏄剧ず锛岀偣鍑绘棤鏁堬紙璁╃敤鎴风偣鎸夐挳锛?
     if (!_choicesEl.classList.contains("hidden")) return
     _advance()
   }
 
-  // ─── 键盘事件（由 world-events.js handleKeyDown 转发） ──────────────────────
+  // 鈹€鈹€鈹€ 閿洏浜嬩欢锛堢敱 world-events.js handleKeyDown 杞彂锛?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   function handleVNKeyDown(event) {
     const key = (event.key || "").toLowerCase()
     if (key === " " || key === "enter" || key === "e") {
@@ -271,11 +330,22 @@
     }
   }
 
-  // ─── 打开 / 关闭 ─────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 鎵撳紑 / 鍏抽棴 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   function _open() {
     _buildDOM()
     _layer.classList.remove("hidden")
     _layer.setAttribute("aria-hidden", "false")
+    _activeSide = null
+    if (_leftSlot) {
+      _leftSlot.classList.remove("vn-enter-left")
+      void _leftSlot.offsetWidth
+      _leftSlot.classList.add("vn-enter-left")
+    }
+    if (_rightSlot) {
+      _rightSlot.classList.remove("vn-enter-right")
+      void _rightSlot.offsetWidth
+      _rightSlot.classList.add("vn-enter-right")
+    }
     if (typeof state !== "undefined") {
       state.vnActive = true
     }
@@ -285,8 +355,12 @@
     if (!_layer) return
     _layer.classList.add("hidden")
     _layer.setAttribute("aria-hidden", "true")
+    _layer.classList.remove("vn-focus-shift")
+    clearTimeout(_focusShiftTimer)
+    _focusShiftTimer = null
+    _activeSide = null
 
-    // 清空立绘
+    // 娓呯┖绔嬬粯
     if (_leftSlot) _leftSlot.innerHTML = ""
     if (_rightSlot) _rightSlot.innerHTML = ""
 
@@ -301,7 +375,7 @@
     }
   }
 
-  // ─── 公开 API ────────────────────────────────────────────────────────────────
+  // 鈹€鈹€鈹€ 鍏紑 API 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   /**
    * showVNDialogue(script, options)
    *
@@ -310,8 +384,8 @@
    *     position: "left" | "right",
    *     name: string,
    *     text: string,
-   *     portrait: string,          // NPC id 或 species id，可省略（沿用上一帧）
-   *     choices: [                 // 可选分支
+   *     portrait: string,          // NPC id 鎴?species id锛屽彲鐪佺暐锛堟部鐢ㄤ笂涓€甯э級
+   *     choices: [                 // 鍙€夊垎鏀?
    *       { label: string, branch: [...lines] }
    *     ]
    *   }
@@ -327,7 +401,7 @@
     _cursor = 0
     _onComplete = (options && options.onComplete) || null
 
-    // 预加载全部立绘
+    // 棰勫姞杞藉叏閮ㄧ珛缁?
     const seen = new Set()
     for (const line of script) {
       if (line.portrait && !seen.has(line.portrait)) {
@@ -341,23 +415,23 @@
     _playLine(_script[0])
   }
 
-  // 挂载到全局
+  // 鎸傝浇鍒板叏灞€
   window.showVNDialogue = showVNDialogue
   window.handleVNKeyDown = handleVNKeyDown
 
-  // Console 测试用 demo 脚本（在浏览器执行 showVNDialogue(demoScript) 即可验证）
+  // Console demo: showVNDialogue(demoScript)
   window.demoScript = [
     {
       position: "left",
       name: "教授 雪松",
       portrait: "professor",
-      text: "欢迎来到星辉城。你是新到来的训练家吧？",
+      text: "欢迎来到星辉城。你是新来的训练家吗？",
     },
     {
       position: "right",
       name: "馆主 阿斯特拉",
       portrait: "leader",
-      text: "我早就听说了你的名字。准备好了吗？真正的试炼才刚刚开始。",
+      text: "我听说过你。准备好接受真正的试炼了吗？",
     },
     {
       position: "left",
@@ -373,7 +447,7 @@
               position: "right",
               name: "馆主 阿斯特拉",
               portrait: "leader",
-              text: "随时等你。但别让我等太久。",
+              text: "我会在道馆等你，不要让我久等。",
             },
           ],
         },

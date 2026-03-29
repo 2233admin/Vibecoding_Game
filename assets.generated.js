@@ -32,7 +32,8 @@ window.GBIT_ASSETS_GENERATED = {
     "player_e7b99ca4": "assets/characters/player/player_e7b99ca4.jpg",
     "player_145cc6c0": "assets/characters/player/player_145cc6c0.jpg",
     "alchemist": "assets/characters/npc/alchemist.jpg",
-    "doctrine_envoy": "assets/characters/npc/doctrine_envoy.jpg"
+    "doctrine_envoy": "assets/characters/npc/doctrine_envoy.jpg",
+    "home_devour": "assets/characters/npc/home_devour.jpg"
   },
   "monsters": {
     "preset_blazehound_fire_elemental": "assets/monsters/normal/blazehound/fusion/stage1/preset_blazehound_fire_elemental.jpg",
@@ -59,7 +60,7 @@ window.GBIT_ASSETS_GENERATED = {
     "sprigoon_weapon_fusion": "assets/monsters/normal/sprigoon/fusion/stage0/sprigoon_weapon_fusion.png",
     "dex_reedimp_v1": "assets/monsters/normal/reedimp/base/stage0/dex_reedimp_v1.jpg",
     "dex_reedimp_v2": "assets/monsters/normal/reedimp/base/stage0/dex_reedimp_v2.jpg",
-    "dex_abyssalor_v1": "assets/monsters/legendary/abyssalor/base/stage0/dex_abyssalor_v1.png",
+    "dex_abyssalor_v1": "assets/monsters/legendary/abyssalor/base/stage0/dex_abyssalor_v1.jpg",
     "dex_abyssalor_v2": "assets/monsters/legendary/abyssalor/base/stage0/dex_abyssalor_v2.png",
     "dex_cinderpup_v1": "assets/monsters/normal/cinderpup/base/stage0/dex_cinderpup_v1.jpg",
     "dex_cinderpup_v2": "assets/monsters/normal/cinderpup/base/stage0/dex_cinderpup_v2.jpg",
@@ -131,6 +132,8 @@ window.GBIT_ASSETS_GENERATED = {
     "dex_abyssalor_cub_v1": "assets/monsters/normal/dex/base/stage0/dex_abyssalor_cub_v1.jpg",
     "dex_sporemarch_v1": "assets/monsters/normal/sporemarch/base/stage0/dex_sporemarch_v1.jpg",
     "dex_sporemarch_v2": "assets/monsters/normal/sporemarch/base/stage0/dex_sporemarch_v2.jpg",
-    "evo_solaraith_cub_grass_resonance_t2": "assets/monsters/legendary/solaraith/fusion/stage2/evo_solaraith_cub_grass_resonance_t2.jpg"
+    "evo_solaraith_cub_grass_resonance_t2": "assets/monsters/legendary/solaraith/fusion/stage2/evo_solaraith_cub_grass_resonance_t2.jpg",
+    "dex_glintfin_v1": "assets/monsters/normal/glintfin/base/stage0/dex_glintfin_v1.jpg",
+    "dex_glintfin_v2": "assets/monsters/normal/glintfin/base/stage0/dex_glintfin_v2.jpg"
   }
 }
